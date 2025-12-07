@@ -1,0 +1,17 @@
+{
+  "chats": [
+    {
+      "id": "0924e8fcb35e",
+      "type": "group",
+      "name": "new",
+      "members": [
+        "user1@gmail.com",
+        "user2@gmail.com"
+      ],
+      "owner": "admin@gmail.com",
+      "createdAt": 1765099989395,
+      "lastPreview": "",
+      "protected": false
+    }
+  ]
+}

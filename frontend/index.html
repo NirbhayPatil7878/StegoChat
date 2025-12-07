@@ -19,7 +19,8 @@
     </div>
 
     <div class="sidebar-new-chat">
-      <button id="btn-new-chat">+ New Chat</button>
+      <button id="btn-new-chat" class="btn-primary">+ New Chat</button>
+      <button id="btn-group-chat" class="btn-secondary" title="Create a group chat">+ Group Chat</button>
     </div>
 
     <div class="sidebar-sub">
@@ -117,6 +118,21 @@
     <h3>Secret Message</h3>
     <p id="message-popup-text" style="font-size:14px; text-align:left; line-height:1.4;"></p>
     <button id="message-popup-close" class="cancel">Close</button>
+  </div>
+</div>
+
+
+<!-- Create Group Chat modal -->
+<div id="group-chat-popup" class="password-popup hidden">
+  <div class="popup-box">
+    <h3>Create Group Chat</h3>
+    <p>Enter comma-separated emails to add to the group:</p>
+    <input id="group-members-input" placeholder="user1@example.com,user2@example.com" style="width:100%; padding:8px; margin-bottom:8px;">
+    <input id="group-name-input" placeholder="Group name (optional)" style="width:100%; padding:8px; margin-bottom:8px;">
+    <div style="text-align:right; margin-top:8px;">
+      <button id="group-create-cancel" class="cancel">Cancel</button>
+      <button id="group-create-confirm" class="confirm">Create</button>
+    </div>
   </div>
 </div>
 

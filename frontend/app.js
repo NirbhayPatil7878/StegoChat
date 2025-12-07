@@ -1,5 +1,22 @@
 
 let mode = 'upload';
+
+async function loadChatsFromServer(){
+  try{
+    const res = await fetch('/api/chats');
+    const data = await res.json();
+    if(data.status==='ok' && Array.isArray(data.chats)){
+      chats = data.chats;
+      renderChatList();
+    }
+  }catch(e){
+    console.error('Failed to load chats', e);
+  }
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  loadChatsFromServer();
+});
+
 let chats = [];
 let currentChatId = null;
 
@@ -100,7 +117,7 @@ function renderChatList() {
       </div>
       <div class="chat-meta">
         <div class="chat-title-row">
-          <span class="chat-title">${chat.peerEmail || 'Chat #' + chat.shortId}</span>
+          <span class=\"chat-title\">${chat.name || chat.peerEmail || 'Chat #' + (chat.shortId||chat.id)}</span>
           <span class="chat-time">${timeStr}</span>
         </div>
         <div class="chat-meta-row">
@@ -342,7 +359,7 @@ document.addEventListener('click', async (e) => {
   if (!e.target.classList.contains('bubble-menu-item')) return;
 
   const action = e.target.dataset.action;
-  const chatId = parseInt(e.target.dataset.id);
+  const chatId = e.target.dataset.id;
   const chat = chats.find(c => c.id === chatId);
   if (!chat) return;
 
@@ -444,3 +461,74 @@ messagePopupClose.onclick = () => messagePopup.classList.add('hidden');
 // initial
 renderChatList();
 renderChatView();
+
+
+
+// Group chat UI handlers (ensure present)
+document.addEventListener('DOMContentLoaded', function(){
+  const btnGroup = document.getElementById('btn-group-chat');
+  const popup = document.getElementById('group-chat-popup');
+  const cancel = document.getElementById('group-create-cancel');
+  const confirm = document.getElementById('group-create-confirm');
+  if(btnGroup && popup){
+    btnGroup.addEventListener('click', ()=> { popup.classList.remove('hidden'); popup.querySelector('#group-members-input').focus(); });
+  }
+  if(cancel){
+    cancel.addEventListener('click', ()=> { popup.classList.add('hidden'); });
+  }
+  if(confirm){
+    confirm.addEventListener('click', async ()=> {
+      const membersRaw = document.getElementById('group-members-input').value.trim();
+      const name = document.getElementById('group-name-input').value.trim();
+      if(!membersRaw){ alert('Please enter at least one member email'); return; }
+      const members = membersRaw.split(',').map(s=>s.trim()).filter(Boolean);
+      const owner = (document.getElementById('current-user-label') && document.getElementById('current-user-label').textContent) || 'admin@gmail.com';
+      try{
+        const res = await fetch('/api/chats', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'group', name: name, members: members, owner: owner}) });
+        const data = await res.json();
+        if(data.status === 'ok'){
+          // ensure name populated
+          if(!data.chat.name || data.chat.name.trim()===''){
+            data.chat.name = data.chat.members && data.chat.members.length ? data.chat.members.join(', ') : (data.chat.owner || 'Group');
+          }
+          // add to local chats and re-render list if renderChatList exists
+          if(typeof chats !== 'undefined' && typeof renderChatList === 'function'){
+            chats.push(data.chat);
+            renderChatList();
+          }
+          popup.classList.add('hidden');
+        } else {
+          alert('Failed to create group: ' + (data.error || JSON.stringify(data)));
+        }
+      }catch(err){ console.error(err); alert('Error creating group'); }
+    });
+  }
+});
+
+
+
+// Message options handlers (added to support Open/Download/Info/Delete)
+function downloadImage(filename, url){ 
+  // create link and click
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'stego-image.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function deleteMessageById(msgId){
+  // frontend-only: remove message from UI and optionally call backend (not implemented)
+  const el = document.querySelector('[data-msg-id="' + msgId + '"]');
+  if(el) el.remove();
+  // TODO: call backend to delete stored file/message if needed
+}
+
+function openMessageInNewTab(url){
+  window.open(url, '_blank');
+}
+
+function showMessageInfo(msg){
+  alert('Message info:\n' + JSON.stringify(msg, null, 2));
+}

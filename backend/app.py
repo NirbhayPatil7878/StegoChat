@@ -79,5 +79,48 @@ def api_extract():
         return jsonify({'error': str(e)}), 500
     return jsonify({'status': 'ok', 'message': m})
 
+
+import json, time
+DATA_FILE = os.path.join(BASE, 'data.json')
+if not os.path.exists(DATA_FILE):
+    with open(DATA_FILE, 'w') as f:
+        json.dump({'chats':[]}, f)
+
+def load_data():
+    with open(DATA_FILE,'r') as f:
+        return json.load(f)
+
+def save_data(data):
+    with open(DATA_FILE,'w') as f:
+        json.dump(data, f, indent=2)
+
+@app.route('/api/chats', methods=['GET'])
+def api_list_chats():
+    data = load_data()
+    return jsonify({'status':'ok', 'chats': data.get('chats', [])})
+
+@app.route('/api/chats', methods=['POST'])
+def api_create_chat():
+    payload = request.get_json() or {}
+    chat_type = payload.get('type','private')
+    name = payload.get('name') or ''
+    members = payload.get('members') or []
+    owner = payload.get('owner') or 'unknown'
+    chat_id = ''.join(random.choice('0123456789abcdef') for _ in range(12))
+    chat = {
+        'id': chat_id,
+        'type': chat_type,
+        'name': name,
+        'members': members,
+        'owner': owner,
+        'createdAt': int(time.time() * 1000),
+        'lastPreview': '',
+        'protected': False
+    }
+    data = load_data()
+    data.setdefault('chats', []).append(chat)
+    save_data(data)
+    return jsonify({'status':'ok', 'chat': chat})
+
 if __name__ == '__main__':
     app.run(debug=True)
