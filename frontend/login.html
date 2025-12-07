@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SecretSnap – Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-body">
+  <div class="auth-card">
+    <div class="auth-icon">🔒</div>
+    <h2>SecretSnap</h2>
+    <p class="auth-subtitle">Hide secret messages in images with steganography</p>
+
+    <div class="auth-tabs">
+      <button id="tab-login" class="auth-tab active">Login</button>
+      <button id="tab-register" class="auth-tab">Register</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" required>
+
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" required>
+
+      <button type="submit" class="auth-btn">Login</button>
+    </form>
+
+    <form id="register-form" class="auth-form hidden">
+      <label>Email</label>
+      <input type="email" id="reg-email" required>
+
+      <label>Username</label>
+      <input type="text" id="reg-username" required>
+
+      <label>Password</label>
+      <input type="password" id="reg-password" required>
+
+      <label>Confirm Password</label>
+      <input type="password" id="reg-confirm" required>
+
+      <button type="submit" class="auth-btn">Create Account</button>
+    </form>
+
+    <p class="auth-hint">Demo only – accounts are stored in browser storage.</p>
+  </div>
+
+  <script>
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+
+    tabLogin.onclick = () => {
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+    };
+
+    tabRegister.onclick = () => {
+      tabRegister.classList.add('active');
+      tabLogin.classList.remove('active');
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    };
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('secretsnap_users') || '[]');
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem('secretsnap_users', JSON.stringify(users));
+    }
+
+    registerForm.onsubmit = (e) => {
+      e.preventDefault();
+      const email = document.getElementById('reg-email').value.trim();
+      const username = document.getElementById('reg-username').value.trim();
+      const pw = document.getElementById('reg-password').value;
+      const pw2 = document.getElementById('reg-confirm').value;
+
+      if (pw !== pw2) {
+        alert('Passwords do not match');
+        return;
+      }
+      const users = getUsers();
+      if (users.find(u => u.email === email)) {
+        alert('User already exists');
+        return;
+      }
+      users.push({ email, username, password: pw });
+      saveUsers(users);
+      alert('Account created! Please login.');
+      tabLogin.click();
+    };
+
+    loginForm.onsubmit = (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pw = document.getElementById('login-password').value;
+      const users = getUsers();
+      const user = users.find(u => u.email === email && u.password === pw);
+      if (!user) {
+        alert('Invalid credentials');
+        return;
+      }
+      sessionStorage.setItem('secretsnap_current_user', JSON.stringify(user));
+      window.location.href = '/chat';
+    };
+  </script>
+</body>
+</html>

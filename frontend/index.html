@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SecretSnap – Stego Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div>
+        <h2>SecretSnap</h2>
+        <small id="current-user-label" class="user-label"></small>
+      </div>
+      <span class="status-dot"></span>
+    </div>
+
+    <div class="sidebar-new-chat">
+      <button id="btn-new-chat">+ New Chat</button>
+    </div>
+
+    <div class="sidebar-sub">
+      <input type="text" class="search" placeholder="Search chats (UI only)">
+    </div>
+
+    <div id="chat-list" class="chat-list">
+      <div class="chat-placeholder">No chats yet. Create a chat to start messaging.</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="main-header">
+      <div>
+        <div id="chat-title" class="chat-title">No chat selected</div>
+        <div class="chat-subtitle">Your messages are hidden in images using steganography</div>
+      </div>
+      <div class="mode-toggle">
+        <button id="btn-upload" class="mode-btn active">Use My Image</button>
+        <button id="btn-random" class="mode-btn">Random Image</button>
+      </div>
+    </header>
+
+    <section id="chat-view" class="chat-view">
+      <p class="empty">Select a chat or create a new one to start messaging.</p>
+    </section>
+
+    <section class="composer">
+      <button id="btn-open-hidden-popup" class="send-btn full">Send Hidden Message</button>
+      <p class="status" id="embed-status"></p>
+    </section>
+
+    <section class="extract-bar">
+      <div class="extract-field">
+        <label class="field-label">Stego Image (to reveal)</label>
+        <input type="file" id="extract-image" accept="image/*">
+      </div>
+      <div class="extract-field">
+        <label class="field-label">Password</label>
+        <input type="password" id="extract-pass" placeholder="Password to reveal">
+      </div>
+      <button id="btn-extract" class="reveal-btn">Reveal Message</button>
+      <p id="extract-result" class="status"></p>
+    </section>
+  </main>
+</div>
+
+<!-- New Chat modal -->
+<div id="new-chat-popup" class="password-popup hidden">
+  <div class="popup-box wide">
+    <h3>Start New Chat</h3>
+    <p class="popup-sub">Enter the email of the person you want to chat with</p>
+
+    <label>User Email</label>
+    <input type="email" id="new-chat-email" placeholder="user@example.com">
+
+    <div class="toggle-row">
+      <span>Protect chat with password</span>
+      <label class="switch">
+        <input type="checkbox" id="new-chat-protect">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <label>Chat Password</label>
+    <input type="password" id="new-chat-password" placeholder="Chat password" disabled>
+
+    <button id="new-chat-create">Create Chat</button>
+    <button id="new-chat-cancel" class="cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Password popup for opening message -->
+<div id="password-popup" class="password-popup hidden">
+  <div class="popup-box">
+    <h3>Enter Image Password</h3>
+    <input type="password" id="popup-pass" placeholder="Password">
+    <button id="popup-open-btn">Open Message</button>
+    <button id="popup-cancel-btn" class="cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Info popup -->
+<div id="info-popup" class="password-popup hidden">
+  <div class="popup-box">
+    <h3>Chat Info</h3>
+    <p id="info-content" style="font-size: 13px; text-align: left; line-height: 1.4;"></p>
+    <button id="info-close-btn" class="cancel">Close</button>
+  </div>
+</div>
+
+<!-- Secret message popup -->
+<div id="message-popup" class="password-popup hidden">
+  <div class="popup-box">
+    <h3>Secret Message</h3>
+    <p id="message-popup-text" style="font-size:14px; text-align:left; line-height:1.4;"></p>
+    <button id="message-popup-close" class="cancel">Close</button>
+  </div>
+</div>
+
+<!-- Create Hidden Message modal -->
+<div id="hidden-msg-popup" class="password-popup hidden">
+  <div class="popup-box wide">
+    <h3>Create Hidden Message</h3>
+    <p class="popup-sub">Hide your secret message inside an image using steganography</p>
+
+    <label>Select Image</label>
+    <input type="file" id="hm-image" accept="image/*">
+
+    <label>Secret Message</label>
+    <textarea id="hm-message" rows="3" placeholder="Type your secret message here..."></textarea>
+
+    <label>Image Password</label>
+    <input type="password" id="hm-password" placeholder="Password to decrypt the message">
+
+    <div class="toggle-row">
+      <span>Use decoy password (fake message)</span>
+      <label class="switch">
+        <input type="checkbox" id="hm-decoy-toggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div id="hm-decoy-section" class="hidden">
+      <label>Decoy Password</label>
+      <input type="password" id="hm-decoy-pass" placeholder="Alternative password for fake message">
+
+      <label>Decoy Message</label>
+      <textarea id="hm-decoy-message" rows="2" placeholder="Fake message to show with decoy password"></textarea>
+    </div>
+
+    <div class="toggle-row">
+      <span>Self-destruct after viewing (UI only)</span>
+      <label class="switch">
+        <input type="checkbox" id="hm-self-destruct">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button id="hm-send-btn">Send Hidden Message</button>
+    <button id="hm-cancel-btn" class="cancel">Cancel</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
