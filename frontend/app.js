@@ -1,6 +1,13 @@
 
 let mode = 'upload';
 
+// Track deleted stego image URLs for UI-only deletion persistence (frontend only)
+if (typeof window !== 'undefined') {
+  if (!window.deletedStegoUrls) {
+    window.deletedStegoUrls = new Set();
+  }
+}
+
 async function loadChatsFromServer(){
   try{
     const res = await fetch('/api/chats');
@@ -169,12 +176,20 @@ function renderChatView() {
       <div class="meta">Cover mode: ${chat.mode === 'upload' ? 'User image' : 'Random image'}</div>
     </div>
   `;
-  chatViewEl.innerHTML = html;
+  
+  // Skip rendering stego image if it was deleted in this session
+  try {
+    if (typeof window !== 'undefined' && window.deletedStegoUrls && chat && chat.stegoUrl && window.deletedStegoUrls.has(chat.stegoUrl)) {
+      console.debug('render: skipping deleted stegoUrl', chat.stegoUrl);
+      html = ''; // clear html so it doesn't reappear
+    }
+  } catch (e) { console.error(e); }
+chatViewEl.innerHTML = html;
   chatViewEl.scrollTop = chatViewEl.scrollHeight;
 }
 
 // New Chat modal
-btnNewChat.onclick = () => {
+if (btnNewChat) btnNewChat.onclick = () => {
   newChatEmail.value = '';
   newChatProtect.checked = false;
   newChatPassword.value = '';
@@ -182,15 +197,15 @@ btnNewChat.onclick = () => {
   newChatPopup.classList.remove('hidden');
 };
 
-newChatProtect.onchange = () => {
+if (newChatProtect) newChatProtect.onchange = () => {
   newChatPassword.disabled = !newChatProtect.checked;
 };
 
-newChatCancel.onclick = () => {
+if (newChatCancel) newChatCancel.onclick = () => {
   newChatPopup.classList.add('hidden');
 };
 
-newChatCreate.onclick = () => {
+if (newChatCreate) newChatCreate.onclick = () => {
   const email = newChatEmail.value.trim();
   const protect = newChatProtect.checked;
   const chatPw = newChatPassword.value.trim();
@@ -250,10 +265,10 @@ hmDecoyToggle.onchange = () => {
   hmDecoySection.classList.toggle('hidden', !hmDecoyToggle.checked);
 };
 
-hmCancelBtn.onclick = () => hiddenPopup.classList.add('hidden');
+if (hmCancelBtn) hmCancelBtn.onclick = () => hiddenPopup.classList.add('hidden');
 
 // send hidden message (embed)
-hmSendBtn.onclick = async () => {
+if (hmSendBtn) hmSendBtn.onclick = async () => {
   embedStatus.textContent = '';
   const chat = chats.find(c => c.id === currentChatId);
   if (!chat) {
@@ -312,7 +327,7 @@ hmSendBtn.onclick = async () => {
 };
 
 // bottom extract bar (manual)
-btnExtract.onclick = async () => {
+if (btnExtract) btnExtract.onclick = async () => {
   extractResult.textContent = 'Revealing message...';
   const password = extractPass.value.trim();
   if (!password) {
@@ -358,12 +373,48 @@ document.addEventListener('click', async (e) => {
 
   if (!e.target.classList.contains('bubble-menu-item')) return;
 
-  const action = e.target.dataset.action;
-  const chatId = e.target.dataset.id;
-  const chat = chats.find(c => c.id === chatId);
-  if (!chat) return;
 
-  if (action === 'open') {
+  // determine action and chat id (support id or shortId)
+  const action = e.target.dataset.action;
+  const chatId = e.target.dataset.id || e.target.dataset.shortId || e.target.dataset.msgId;
+  if (!action) {
+    console.debug('bubble-menu: no action dataset on target', e.target);
+    return;
+  }
+  console.debug('bubble-menu click', { action, chatId });
+
+  // try to resolve chat object robustly
+  let chat = null;
+  if (chatId) {
+    // try exact id match or shortId match
+    chat = (Array.isArray(chats) && chats.find(c => String(c.id) === String(chatId))) ||
+           (Array.isArray(chats) && chats.find(c => String(c.shortId) === String(chatId)));
+  }
+
+  // fallback: if viewing a single chat, try currentChat or currentChatId if present
+  if (!chat) {
+    if (typeof currentChat !== 'undefined' && currentChat && (String(currentChat.id) === String(chatId) || String(currentChat.shortId) === String(chatId))) {
+      chat = currentChat;
+    } else if (typeof currentChatId !== 'undefined' && String(currentChatId) === String(chatId)) {
+      chat = (Array.isArray(chats) && chats.find(c => String(c.id) === String(currentChatId)));
+    } else if (!chat) {
+      // last resort: try to build minimal chat object from DOM (grab image src)
+      const bubble = e.target.closest('.image-bubble') || e.target.closest('.bubble') || e.target.closest('[data-id]');
+      if (bubble) {
+        const img = bubble.querySelector('img');
+        if (img && img.src) {
+          chat = { id: chatId || null, stegoUrl: img.src, shortId: chatId || null };
+          console.debug('bubble-menu: constructed chat from DOM', chat);
+        }
+      }
+    }
+  }
+
+  if (!chat) {
+    console.warn('bubble-menu: could not resolve chat for action', { action, chatId });
+    return;
+  }
+if (action === 'open') {
     openPasswordPopup(chat);
   }
   if (action === 'download') {
@@ -377,12 +428,62 @@ document.addEventListener('click', async (e) => {
   if (action === 'info') {
     openInfoPopup(chat);
   }
+  
+  
   if (action === 'delete') {
-    chats = chats.filter(c => c.id !== chatId);
-    if (currentChatId === chatId) currentChatId = null;
-    renderChatList();
-    renderChatView();
+    // Confirm deletion
+    if (!confirm('Delete this hidden image from this chat?')) {
+      return;
+    }
+
+    // Try to find the bubble element in the DOM
+    const bubbleEl =
+      e.target.closest('.image-bubble') ||
+      e.target.closest('.bubble') ||
+      e.target.closest('[data-msg-id]') ||
+      e.target.closest('[data-id]');
+
+    // Mark this stego URL as deleted for this session (so it does not re-render)
+    try {
+      if (typeof window !== 'undefined' && window.deletedStegoUrls && chat && chat.stegoUrl) {
+        window.deletedStegoUrls.add(chat.stegoUrl);
+        console.debug('bubble-menu: marked stegoUrl deleted (via chat object)', chat.stegoUrl);
+      }
+    } catch (err) {
+      console.error('Error tracking deleted stegoUrl:', err);
+    }
+
+    // Clear stego image from this chat object so future renders treat it as empty
+    try {
+      if (chat) {
+        chat.stegoUrl = null;
+        chat.lastPreview = 'Hidden image deleted';
+        chat.unread = false;
+      }
+    } catch (err) {
+      console.error('Error clearing chat stegoUrl:', err);
+    }
+
+    // Remove bubble element from DOM if present
+    if (bubbleEl && bubbleEl.remove) {
+      try {
+        bubbleEl.remove();
+      } catch (err) {
+        console.error('Error removing bubble element:', err);
+      }
+    }
+
+    // Refresh UI
+    try {
+      if (typeof renderChatList === 'function') renderChatList();
+      if (typeof renderChatView === 'function') renderChatView();
+    } catch (err) {
+      console.error('Error refreshing view after delete:', err);
+    }
+
+    return;
   }
+
 });
 
 // open password popup for chat
@@ -390,7 +491,7 @@ function openPasswordPopup(chat) {
   popupPass.value = '';
   passwordPopup.classList.remove('hidden');
 
-  popupOpenBtn.onclick = async () => {
+  if (popupOpenBtn) popupOpenBtn.onclick = async () => {
     const password = popupPass.value.trim();
     if (!password) return;
 
@@ -430,7 +531,7 @@ function openPasswordPopup(chat) {
     passwordPopup.classList.add('hidden');
   };
 
-  popupCancelBtn.onclick = () => passwordPopup.classList.add('hidden');
+  if (popupCancelBtn) popupCancelBtn.onclick = () => passwordPopup.classList.add('hidden');
 }
 
 // info popup
@@ -453,7 +554,7 @@ function openInfoPopup(chat) {
   infoPopup.classList.remove('hidden');
 }
 
-infoCloseBtn.onclick = () => infoPopup.classList.add('hidden');
+if (infoCloseBtn) infoCloseBtn.onclick = () => infoPopup.classList.add('hidden');
 
 // message popup close
 messagePopupClose.onclick = () => messagePopup.classList.add('hidden');
