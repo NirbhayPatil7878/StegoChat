@@ -1,0 +1,55 @@
+StegoChat – Ultra-Restrictive Private License
+---------------------------------------------
+
+Copyright (c) 2025 Nirbhay Satapa Patil
+ALL RIGHTS RESERVED.
+
+1. ABSOLUTE OWNERSHIP
+   The Software is the sole and exclusive property of **Nirbhay Satapa Patil**.
+   No other person or entity is granted any rights, permissions,
+   licenses, or claims to the Software.
+
+2. NO RIGHTS GRANTED
+   Except for the copyright owner, **no individual or entity is permitted to:**
+   - Use the Software
+   - Access the Software
+   - View the Software
+   - Copy or reproduce the Software
+   - Modify or alter the Software
+   - Reverse-engineer or analyze the Software
+   - Distribute, publish, or share the Software
+   - Host the Software or make it available to others
+   - Create derivative works
+   - Claim authorship or ownership
+
+   **All rights are exclusively retained by the copyright owner.**
+
+3. PROHIBITION OF ANY USE
+   Any action involving the Software by anyone other than the owner—
+   whether personal, academic, commercial, or experimental—is strictly
+   prohibited.
+
+4. NO IMPLIED LICENSE
+   Nothing in possession, access, sharing, collaboration, or conversation 
+   related to the Software shall be interpreted as granting any form of 
+   license or permission.
+
+5. LIABILITY & WARRANTY
+   The Software is provided “AS IS” without warranty of any kind.
+   The owner is not liable for any damages resulting from possession 
+   or unauthorized use.
+
+6. VIOLATION & TERMINATION
+   Any unauthorized use constitutes an immediate violation of this license.
+   Upon violation, the individual or entity must:
+   - Cease all activity involving the Software,
+   - Destroy all copies, and
+   - Remove all stored data related to the Software.
+
+7. PERMISSIONS
+   Anyone seeking permission to use, access, or modify the Software must
+   obtain explicit, written authorization from:
+
+   **Owner: Nirbhay Satapa Patil**
+   Email: <ff4056232@gmail.com> 
+
