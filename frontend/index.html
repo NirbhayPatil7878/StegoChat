@@ -24,7 +24,13 @@
     </div>
 
     <div class="sidebar-sub">
-      <input type="text" class="search" placeholder="Search chats (UI only)">
+      <input type="text" id="chat-search" class="search" placeholder="Search chats">
+      <select id="chat-type-filter" class="search" style="margin-top:8px;">
+        <option value="">All types</option>
+        <option value="private">Private</option>
+        <option value="group">Group</option>
+      </select>
+      <button id="btn-logout" class="btn-secondary" style="margin-top:8px; width:100%;">Logout</button>
     </div>
 
     <div id="chat-list" class="chat-list">
@@ -39,6 +45,7 @@
         <div class="chat-subtitle">Your messages are hidden in images using steganography</div>
       </div>
       <div class="mode-toggle">
+        <button id="btn-export-chat" class="mode-btn">Export Chat</button>
         <button id="btn-upload" class="mode-btn active">Use My Image</button>
         <button id="btn-random" class="mode-btn">Random Image</button>
       </div>
@@ -171,6 +178,25 @@
       <span>Self-destruct after viewing (UI only)</span>
       <label class="switch">
         <input type="checkbox" id="hm-self-destruct">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    
+    <label>Stego Preset</label>
+    <select id="hm-preset">
+      <option value="low">Low detectability</option>
+      <option value="balanced" selected>Balanced</option>
+      <option value="high">High capacity</option>
+    </select>
+
+    <label>TTL (seconds, optional)</label>
+    <input type="number" id="hm-ttl" min="0" placeholder="0 = never expire">
+
+    <div class="toggle-row">
+      <span>Burn after read (per user)</span>
+      <label class="switch">
+        <input type="checkbox" id="hm-read-once">
         <span class="slider"></span>
       </label>
     </div>

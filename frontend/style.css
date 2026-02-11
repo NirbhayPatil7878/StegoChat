@@ -582,3 +582,13 @@ body.auth-body {
 .switch input:checked + .slider:before {
   transform: translateX(18px);
 }
+
+
+#hidden-msg-popup select,
+#hidden-msg-popup input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}

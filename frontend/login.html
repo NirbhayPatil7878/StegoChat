@@ -43,7 +43,7 @@
       <button type="submit" class="auth-btn">Create Account</button>
     </form>
 
-    <p class="auth-hint">Demo only – accounts are stored in browser storage.</p>
+    <p class="auth-hint">Demo mode – accounts are stored in backend JSON storage.</p>
   </div>
 
   <script>
@@ -66,17 +66,16 @@
       loginForm.classList.add('hidden');
     };
 
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('secretsnap_users') || '[]');
+    async function postJson(url, body){
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
     }
 
-    function saveUsers(users) {
-      localStorage.setItem('secretsnap_users', JSON.stringify(users));
-    }
-
-    registerForm.onsubmit = (e) => {
+    registerForm.onsubmit = async (e) => {
       e.preventDefault();
-      const email = document.getElementById('reg-email').value.trim();
+      const email = document.getElementById('reg-email').value.trim().toLowerCase();
       const username = document.getElementById('reg-username').value.trim();
       const pw = document.getElementById('reg-password').value;
       const pw2 = document.getElementById('reg-confirm').value;
@@ -85,29 +84,27 @@
         alert('Passwords do not match');
         return;
       }
-      const users = getUsers();
-      if (users.find(u => u.email === email)) {
-        alert('User already exists');
-        return;
+      try {
+        await postJson('/api/auth/register', {email, username, password: pw});
+        alert('Account created! Please login.');
+        tabLogin.click();
+      } catch(err){
+        alert(err.message);
       }
-      users.push({ email, username, password: pw });
-      saveUsers(users);
-      alert('Account created! Please login.');
-      tabLogin.click();
     };
 
-    loginForm.onsubmit = (e) => {
+    loginForm.onsubmit = async (e) => {
       e.preventDefault();
-      const email = document.getElementById('login-email').value.trim();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
       const pw = document.getElementById('login-password').value;
-      const users = getUsers();
-      const user = users.find(u => u.email === email && u.password === pw);
-      if (!user) {
-        alert('Invalid credentials');
-        return;
+      try {
+        const data = await postJson('/api/auth/login', {email, password: pw});
+        sessionStorage.setItem('secretsnap_token', data.token);
+        sessionStorage.setItem('secretsnap_current_user', JSON.stringify(data.user));
+        window.location.href = '/chat';
+      } catch(err){
+        alert(err.message);
       }
-      sessionStorage.setItem('secretsnap_current_user', JSON.stringify(user));
-      window.location.href = '/chat';
     };
   </script>
 </body>
