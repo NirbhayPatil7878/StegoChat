@@ -17,6 +17,7 @@ const filterType = document.getElementById('chat-type-filter');
 const cloneSelect = document.getElementById('ui-clone-select');
 const brandNameEl = document.getElementById('app-brand-name');
 const brandLogoEl = document.getElementById('app-brand-logo');
+const chatSubtitleEl = document.getElementById('chat-subtitle');
 
 const btnUploadMode = document.getElementById('btn-upload');
 const btnRandomMode = document.getElementById('btn-random');
@@ -66,10 +67,10 @@ async function api(path, opts = {}) {
 
 function applyUiCloneTheme(theme) {
   const themeMeta = {
-    default: { name: 'StegoChat', logo: 'S', title: 'StegoChat – Secure Chat' },
-    whatsapp: { name: 'WhatsApp', logo: 'WA', title: 'WhatsApp Clone + StegoChat' },
-    instagram: { name: 'Instagram', logo: 'IG', title: 'Instagram Clone + StegoChat' },
-    telegram: { name: 'Telegram', logo: 'TG', title: 'Telegram Clone + StegoChat' }
+    default: { name: 'StegoChat', logo: 'S', title: 'StegoChat – Secure Chat', subtitle: 'Your messages are hidden in images using steganography' },
+    whatsapp: { name: 'WhatsApp', logo: 'WA', title: 'WhatsApp Style + StegoChat', subtitle: 'WhatsApp-inspired layout with Stego lock tools' },
+    instagram: { name: 'Instagram', logo: 'IG', title: 'Instagram Style + StegoChat', subtitle: 'Instagram-inspired DM style with hidden message lock' },
+    telegram: { name: 'Telegram', logo: 'TG', title: 'Telegram Style + StegoChat', subtitle: 'Telegram-inspired chat layout with Stego features' }
   };
   const valid = Object.keys(themeMeta);
   const next = valid.includes(theme) ? theme : 'default';
@@ -78,6 +79,7 @@ function applyUiCloneTheme(theme) {
   if (cloneSelect) cloneSelect.value = next;
   if (brandNameEl) brandNameEl.textContent = themeMeta[next].name;
   if (brandLogoEl) brandLogoEl.textContent = themeMeta[next].logo;
+  if (chatSubtitleEl) chatSubtitleEl.textContent = themeMeta[next].subtitle;
   document.title = themeMeta[next].title;
   localStorage.setItem('secretsnap_ui_clone', next);
 }

@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="app">
+<div class="app" id="app-shell">
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="left-sidebar">
     <div class="sidebar-header">
       <div>
         <h2 id="app-brand-name">StegoChat</h2>
@@ -44,11 +44,11 @@
     </div>
   </aside>
 
-  <main class="main">
+  <main class="main" id="chat-main">
     <header class="main-header">
       <div>
         <div id="chat-title" class="chat-title">No chat selected</div>
-        <div class="chat-subtitle">Your messages are hidden in images using steganography</div>
+        <div id="chat-subtitle" class="chat-subtitle">Your messages are hidden in images using steganography</div>
       </div>
       <div class="mode-toggle">
         <button id="btn-export-chat" class="mode-btn">Export Chat</button>
