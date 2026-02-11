@@ -1,635 +1,338 @@
-
 let mode = 'upload';
-
-// Track deleted stego image URLs for UI-only deletion persistence (frontend only)
-if (typeof window !== 'undefined') {
-  if (!window.deletedStegoUrls) {
-    window.deletedStegoUrls = new Set();
-  }
-}
-
-async function loadChatsFromServer(){
-  try{
-    const res = await fetch('/api/chats');
-    const data = await res.json();
-    if(data.status==='ok' && Array.isArray(data.chats)){
-      chats = data.chats;
-      renderChatList();
-    }
-  }catch(e){
-    console.error('Failed to load chats', e);
-  }
-}
-document.addEventListener('DOMContentLoaded', ()=>{
-  loadChatsFromServer();
-});
-
 let chats = [];
 let currentChatId = null;
+let messagesByChat = {};
 
-// elements
-const btnUploadMode = document.getElementById('btn-upload');
-const btnRandomMode = document.getElementById('btn-random');
+const token = sessionStorage.getItem('secretsnap_token');
+if (!token) window.location.href = '/';
 
+const userLabel = document.getElementById('current-user-label');
 const chatListEl = document.getElementById('chat-list');
 const chatViewEl = document.getElementById('chat-view');
 const chatTitleEl = document.getElementById('chat-title');
 const embedStatus = document.getElementById('embed-status');
-
-const extractImageInput = document.getElementById('extract-image');
-const extractPass = document.getElementById('extract-pass');
-const btnExtract = document.getElementById('btn-extract');
 const extractResult = document.getElementById('extract-result');
+const searchInput = document.getElementById('chat-search');
+const filterType = document.getElementById('chat-type-filter');
+const cloneSelect = document.getElementById('ui-clone-select');
 
-const btnNewChat = document.getElementById('btn-new-chat');
+const btnUploadMode = document.getElementById('btn-upload');
+const btnRandomMode = document.getElementById('btn-random');
+const btnLogout = document.getElementById('btn-logout');
+const btnExportChat = document.getElementById('btn-export-chat');
+const btnStegoLock = document.getElementById('btn-stego-lock');
+
 const newChatPopup = document.getElementById('new-chat-popup');
+const btnNewChat = document.getElementById('btn-new-chat');
 const newChatEmail = document.getElementById('new-chat-email');
-const newChatProtect = document.getElementById('new-chat-protect');
-const newChatPassword = document.getElementById('new-chat-password');
 const newChatCreate = document.getElementById('new-chat-create');
 const newChatCancel = document.getElementById('new-chat-cancel');
+
+const hiddenPopup = document.getElementById('hidden-msg-popup');
+const btnOpenHiddenPopup = document.getElementById('btn-open-hidden-popup');
+const hmImage = document.getElementById('hm-image');
+const hmMessage = document.getElementById('hm-message');
+const hmPassword = document.getElementById('hm-password');
+const hmPreset = document.getElementById('hm-preset');
+const hmTtl = document.getElementById('hm-ttl');
+const hmReadOnce = document.getElementById('hm-read-once');
+const hmSendBtn = document.getElementById('hm-send-btn');
+const hmCancelBtn = document.getElementById('hm-cancel-btn');
 
 const passwordPopup = document.getElementById('password-popup');
 const popupPass = document.getElementById('popup-pass');
 const popupOpenBtn = document.getElementById('popup-open-btn');
 const popupCancelBtn = document.getElementById('popup-cancel-btn');
 
-const infoPopup = document.getElementById('info-popup');
-const infoContent = document.getElementById('info-content');
-const infoCloseBtn = document.getElementById('info-close-btn');
-
 const messagePopup = document.getElementById('message-popup');
 const messagePopupText = document.getElementById('message-popup-text');
 const messagePopupClose = document.getElementById('message-popup-close');
 
-const hiddenPopup = document.getElementById('hidden-msg-popup');
-const hmImage = document.getElementById('hm-image');
-const hmMessage = document.getElementById('hm-message');
-const hmPassword = document.getElementById('hm-password');
-const hmDecoyToggle = document.getElementById('hm-decoy-toggle');
-const hmDecoySection = document.getElementById('hm-decoy-section');
-const hmDecoyPass = document.getElementById('hm-decoy-pass');
-const hmDecoyMessage = document.getElementById('hm-decoy-message');
-const hmSelfDestruct = document.getElementById('hm-self-destruct');
-const hmSendBtn = document.getElementById('hm-send-btn');
-const hmCancelBtn = document.getElementById('hm-cancel-btn');
-const btnOpenHiddenPopup = document.getElementById('btn-open-hidden-popup');
+const extractImageInput = document.getElementById('extract-image');
+const extractPass = document.getElementById('extract-pass');
+const btnExtract = document.getElementById('btn-extract');
 
-// show current user
-const userLabel = document.getElementById('current-user-label');
-try {
-  const currentUser = JSON.parse(sessionStorage.getItem('secretsnap_current_user') || 'null');
-  if (currentUser) {
-    userLabel.textContent = currentUser.email;
-  } else {
-    userLabel.textContent = 'Guest';
-  }
-} catch (e) {
-  userLabel.textContent = 'Guest';
+async function api(path, opts = {}) {
+  const headers = opts.headers || {};
+  headers.Authorization = `Bearer ${sessionStorage.getItem('secretsnap_token') || ''}`;
+  const res = await fetch(path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
 }
 
-// mode toggle
-btnUploadMode.onclick = () => {
-  mode = 'upload';
-  btnUploadMode.classList.add('active');
-  btnRandomMode.classList.remove('active');
-};
 
-btnRandomMode.onclick = () => {
-  mode = 'random';
-  btnRandomMode.classList.add('active');
-  btnUploadMode.classList.remove('active');
-};
+function applyUiCloneTheme(theme) {
+  const valid = ['default', 'whatsapp', 'instagram', 'telegram'];
+  const next = valid.includes(theme) ? theme : 'default';
+  document.body.classList.remove('theme-whatsapp', 'theme-instagram', 'theme-telegram');
+  if (next !== 'default') document.body.classList.add(`theme-${next}`);
+  if (cloneSelect) cloneSelect.value = next;
+  localStorage.setItem('secretsnap_ui_clone', next);
+}
 
-// render chat list
+async function bootstrap() {
+  try {
+    const me = await api('/api/me');
+    userLabel.textContent = me.user.email;
+    await loadChats();
+  } catch (e) {
+    alert('Session expired. Please login again.');
+    sessionStorage.clear();
+    window.location.href = '/';
+  }
+}
+
+async function loadChats() {
+  const q = encodeURIComponent((searchInput?.value || '').trim());
+  const type = encodeURIComponent(filterType?.value || '');
+  const data = await api(`/api/chats?q=${q}&type=${type}`);
+  chats = data.chats || [];
+  renderChatList();
+  if (!currentChatId && chats.length) {
+    currentChatId = chats[0].id;
+    await loadMessages(currentChatId);
+  }
+  renderChatView();
+}
+
+async function loadMessages(chatId) {
+  const data = await api(`/api/chat-messages/${chatId}`);
+  messagesByChat[chatId] = data.messages || [];
+}
+
+function chatName(c) {
+  return c.name || (c.type === 'group' ? 'Group Chat' : 'Private Chat');
+}
+
 function renderChatList() {
   if (!chats.length) {
-    chatListEl.innerHTML = '<div class="chat-placeholder">No chats yet. Create a chat to start messaging.</div>';
+    chatListEl.innerHTML = '<div class="chat-placeholder">No chats found.</div>';
     return;
   }
   chatListEl.innerHTML = '';
   chats.forEach(chat => {
     const div = document.createElement('div');
     div.className = 'chat-item' + (chat.id === currentChatId ? ' active' : '');
-    div.dataset.id = chat.id;
-
-    const created = chat.createdAt ? new Date(chat.createdAt) : new Date();
-    const timeStr = created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const firstLetter = (chat.peerEmail || 'C')[0].toUpperCase();
-
     div.innerHTML = `
-      <div class="chat-thumb">
-        <div class="avatar-circle">${firstLetter}</div>
-      </div>
+      <div class="chat-thumb"><div class="avatar-circle">${chatName(chat)[0].toUpperCase()}</div></div>
       <div class="chat-meta">
         <div class="chat-title-row">
-          <span class=\"chat-title\">${chat.name || chat.peerEmail || 'Chat #' + (chat.shortId||chat.id)}</span>
-          <span class="chat-time">${timeStr}</span>
+          <span class="chat-title">${chatName(chat)}</span>
+          <span class="chat-time">${new Date(chat.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
         </div>
         <div class="chat-meta-row">
-          <small>${chat.lastPreview}</small>
-          ${chat.protected ? '<span class="badge-protected">Password Protected</span>' :
-            (chat.unread ? '<span class="unread-dot"></span>' : '')}
+          <small>${chat.lastPreview || ''}</small>
+          <span class="badge-protected">${chat.type}</span>
         </div>
-      </div>
-    `;
-
-    div.addEventListener('click', () => {
+      </div>`;
+    div.onclick = async () => {
       currentChatId = chat.id;
+      await loadMessages(chat.id);
       renderChatList();
       renderChatView();
-    });
-
+    };
     chatListEl.appendChild(div);
   });
 }
 
-// render chat view
 function renderChatView() {
   const chat = chats.find(c => c.id === currentChatId);
   if (!chat) {
     chatTitleEl.textContent = 'No chat selected';
-    chatViewEl.innerHTML = '<p class="empty">Select a chat or create a new one to start messaging.</p>';
+    chatViewEl.innerHTML = '<p class="empty">Select a chat.</p>';
     return;
   }
-  chatTitleEl.textContent = chat.peerEmail || `Chat #${chat.shortId}`;
-
-  if (!chat.stegoUrl) {
-    chatViewEl.innerHTML = '<p class="empty">No hidden messages yet. Click "Send Hidden Message".</p>';
+  chatTitleEl.textContent = `${chatName(chat)} (${chat.type})`;
+  const messages = messagesByChat[chat.id] || [];
+  if (!messages.length) {
+    chatViewEl.innerHTML = '<p class="empty">No hidden messages yet.</p>';
     return;
   }
 
-  const html = `
-    <div class="bubble sent image-bubble" data-id="${chat.id}">
+  chatViewEl.innerHTML = messages.map(m => {
+    const exp = m.expiresAt ? `Expires: ${new Date(m.expiresAt).toLocaleString()}` : 'No expiry';
+    const once = m.readOnce ? 'Burn-after-read enabled' : 'Reusable';
+    return `<div class="bubble sent image-bubble" data-mid="${m.id}">
       <div class="bubble-header">
-        <span>Hidden image sent</span>
+        <span>${m.sender}</span>
         <div class="bubble-menu-btn">⋮</div>
         <div class="bubble-menu-popup hidden">
-          <div class="bubble-menu-item" data-action="open" data-id="${chat.id}">Open</div>
-          <div class="bubble-menu-item" data-action="download" data-id="${chat.id}">Download</div>
-          <div class="bubble-menu-item" data-action="info" data-id="${chat.id}">Info</div>
-          <div class="bubble-menu-item" data-action="delete" data-id="${chat.id}">Delete</div>
+          <div class="bubble-menu-item" data-action="open" data-mid="${m.id}">Open</div>
+          <div class="bubble-menu-item" data-action="download" data-mid="${m.id}">Download</div>
+          <div class="bubble-menu-item" data-action="info" data-mid="${m.id}">Info</div>
         </div>
       </div>
-      <img src="${chat.stegoUrl}" alt="Stego image">
-      <div class="meta">Cover mode: ${chat.mode === 'upload' ? 'User image' : 'Random image'}</div>
-    </div>
-  `;
-  
-  // Skip rendering stego image if it was deleted in this session
-  try {
-    if (typeof window !== 'undefined' && window.deletedStegoUrls && chat && chat.stegoUrl && window.deletedStegoUrls.has(chat.stegoUrl)) {
-      console.debug('render: skipping deleted stegoUrl', chat.stegoUrl);
-      html = ''; // clear html so it doesn't reappear
-    }
-  } catch (e) { console.error(e); }
-chatViewEl.innerHTML = html;
-  chatViewEl.scrollTop = chatViewEl.scrollHeight;
+      <img src="${m.stegoUrl}" alt="Stego image">
+      <div class="meta">${exp} • ${once}</div>
+    </div>`;
+  }).join('');
 }
 
-// New Chat modal
-if (btnNewChat) btnNewChat.onclick = () => {
+btnUploadMode.onclick = () => {
+  mode = 'upload';
+  btnUploadMode.classList.add('active');
+  btnRandomMode.classList.remove('active');
+};
+btnRandomMode.onclick = () => {
+  mode = 'random';
+  btnRandomMode.classList.add('active');
+  btnUploadMode.classList.remove('active');
+};
+
+searchInput?.addEventListener('input', () => loadChats());
+filterType?.addEventListener('change', () => loadChats());
+cloneSelect?.addEventListener('change', (e) => applyUiCloneTheme(e.target.value));
+
+btnLogout.onclick = async () => {
+  try { await api('/api/auth/logout', { method: 'POST' }); } catch (_) {}
+  sessionStorage.clear();
+  window.location.href = '/';
+};
+
+btnExportChat.onclick = async () => {
+  if (!currentChatId) return;
+  const data = await api(`/api/chats/${currentChatId}/export`);
+  const blob = new Blob([JSON.stringify(data.bundle, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `chat-export-${currentChatId}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+btnNewChat.onclick = () => newChatPopup.classList.remove('hidden');
+newChatCancel.onclick = () => newChatPopup.classList.add('hidden');
+newChatCreate.onclick = async () => {
+  const email = newChatEmail.value.trim().toLowerCase();
+  if (!email) return alert('Peer email required');
+  await api('/api/chats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'private', members: [email] })
+  });
+  newChatPopup.classList.add('hidden');
   newChatEmail.value = '';
-  newChatProtect.checked = false;
-  newChatPassword.value = '';
-  newChatPassword.disabled = true;
-  newChatPopup.classList.remove('hidden');
+  await loadChats();
 };
 
-if (newChatProtect) newChatProtect.onchange = () => {
-  newChatPassword.disabled = !newChatProtect.checked;
+// group create
+document.getElementById('btn-group-chat').onclick = () => document.getElementById('group-chat-popup').classList.remove('hidden');
+document.getElementById('group-create-cancel').onclick = () => document.getElementById('group-chat-popup').classList.add('hidden');
+document.getElementById('group-create-confirm').onclick = async () => {
+  const membersRaw = document.getElementById('group-members-input').value.trim();
+  const name = document.getElementById('group-name-input').value.trim();
+  const members = membersRaw.split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  if (!members.length) return alert('Add at least one email');
+  await api('/api/chats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'group', name, members })
+  });
+  document.getElementById('group-chat-popup').classList.add('hidden');
+  await loadChats();
 };
 
-if (newChatCancel) newChatCancel.onclick = () => {
-  newChatPopup.classList.add('hidden');
-};
+btnOpenHiddenPopup.onclick = () => hiddenPopup.classList.remove('hidden');
+if (btnStegoLock) btnStegoLock.onclick = () => hiddenPopup.classList.remove('hidden');
+hmCancelBtn.onclick = () => hiddenPopup.classList.add('hidden');
 
-if (newChatCreate) newChatCreate.onclick = () => {
-  const email = newChatEmail.value.trim();
-  const protect = newChatProtect.checked;
-  const chatPw = newChatPassword.value.trim();
-
-  if (!email) {
-    alert('Please enter user email');
-    return;
-  }
-  if (protect && !chatPw) {
-    alert('Please enter chat password');
-    return;
-  }
-
-  const id = Date.now();
-  const shortId = String(id).slice(-4);
-  const now = new Date();
-
-  const chat = {
-    id,
-    shortId,
-    peerEmail: email,
-    stegoUrl: null,
-    mode: 'upload',
-    lastPreview: 'No messages yet',
-    createdAt: now.toISOString(),
-    unread: false,
-    protected: protect,
-    chatPassword: chatPw || null,
-    selfDestruct: false
-  };
-
-  chats.unshift(chat);
-  currentChatId = id;
-  renderChatList();
-  renderChatView();
-  newChatPopup.classList.add('hidden');
-};
-
-// open hidden message popup
-btnOpenHiddenPopup.onclick = () => {
-  if (!currentChatId) {
-    alert('Please create or select a chat first.');
-    return;
-  }
-  hmImage.value = '';
-  hmMessage.value = '';
-  hmPassword.value = '';
-  hmDecoyToggle.checked = false;
-  hmDecoySection.classList.add('hidden');
-  hmDecoyPass.value = '';
-  hmDecoyMessage.value = '';
-  hmSelfDestruct.checked = false;
-  hiddenPopup.classList.remove('hidden');
-};
-
-hmDecoyToggle.onchange = () => {
-  hmDecoySection.classList.toggle('hidden', !hmDecoyToggle.checked);
-};
-
-if (hmCancelBtn) hmCancelBtn.onclick = () => hiddenPopup.classList.add('hidden');
-
-// send hidden message (embed)
-if (hmSendBtn) hmSendBtn.onclick = async () => {
-  embedStatus.textContent = '';
-  const chat = chats.find(c => c.id === currentChatId);
-  if (!chat) {
-    alert('No active chat');
-    return;
-  }
+hmSendBtn.onclick = async () => {
+  if (!currentChatId) return alert('Choose chat first');
   const msg = hmMessage.value.trim();
   const pw = hmPassword.value.trim();
-  if (!msg || !pw) {
-    alert('Secret message and image password are required.');
-    return;
-  }
-  if (!hmImage.files[0] && mode === 'upload') {
-    alert('Please choose a cover image or switch to Random Image mode.');
-    return;
-  }
+  if (!msg || !pw) return alert('Message/password required');
+  if (mode === 'upload' && !hmImage.files[0]) return alert('Select image for upload mode');
 
   const fd = new FormData();
+  fd.append('chat_id', currentChatId);
   fd.append('mode', mode);
   fd.append('message', msg);
   fd.append('password', pw);
-
-  if (mode === 'upload') {
-    fd.append('image', hmImage.files[0]);
-  }
-
-  const decoyEnabled = hmDecoyToggle.checked;
-  const decoyPass = hmDecoyPass.value.trim();
-  const decoyMsg = hmDecoyMessage.value.trim();
-  const selfDestruct = hmSelfDestruct.checked;
-
-  // For now, decoy data is not used by backend; kept on client only
-  chat.decoy = decoyEnabled ? { password: decoyPass, message: decoyMsg } : null;
-  chat.selfDestruct = selfDestruct;
-  chat.imagePassword = pw;
+  fd.append('preset', hmPreset.value || 'balanced');
+  fd.append('ttl_seconds', String(parseInt(hmTtl.value || '0', 10) || 0));
+  fd.append('read_once', hmReadOnce.checked ? 'true' : 'false');
+  if (mode === 'upload') fd.append('image', hmImage.files[0]);
 
   try {
-    const res = await fetch('/api/embed', { method: 'POST', body: fd });
-    const data = await res.json();
-    if (!res.ok) {
-      alert(data.error || 'Error embedding message.');
-      return;
-    }
-    chat.stegoUrl = data.stego_url;
-    chat.mode = mode;
-    chat.lastPreview = 'Hidden message (locked)';
-    chat.unread = true;
-    renderChatList();
-    renderChatView();
-    embedStatus.textContent = 'Hidden image created for this chat.';
+    await api('/api/embed', { method: 'POST', body: fd });
+    embedStatus.textContent = 'Message embedded and sent.';
     hiddenPopup.classList.add('hidden');
-  } catch (err) {
-    console.error(err);
-    alert('Network error while embedding.');
+    hmMessage.value = ''; hmPassword.value = ''; hmTtl.value = '';
+    await loadChats();
+    await loadMessages(currentChatId);
+    renderChatView();
+  } catch (e) {
+    alert(e.message);
   }
 };
 
-// bottom extract bar (manual)
-if (btnExtract) btnExtract.onclick = async () => {
-  extractResult.textContent = 'Revealing message...';
-  const password = extractPass.value.trim();
-  if (!password) {
-    extractResult.textContent = 'Password is required.';
-    return;
-  }
-  if (!extractImageInput.files[0]) {
-    extractResult.textContent = 'Please choose a stego image.';
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append('image', extractImageInput.files[0]);
-  fd.append('password', password);
-
-  try {
-    const res = await fetch('/api/extract', { method: 'POST', body: fd });
-    const data = await res.json();
-    if (!res.ok) {
-      extractResult.textContent = data.error || 'Error extracting message.';
-      return;
-    }
-    const msg = data.message || '';
-    extractResult.textContent = 'Revealed: ' + msg;
-  } catch (err) {
-    console.error(err);
-    extractResult.textContent = 'Network error while extracting.';
-  }
-};
-
-// bubble menu
+let openingMessage = null;
 document.addEventListener('click', async (e) => {
   if (e.target.classList.contains('bubble-menu-btn')) {
-    const bubble = e.target.closest('.image-bubble');
-    const popup = bubble.querySelector('.bubble-menu-popup');
+    const popup = e.target.parentElement.querySelector('.bubble-menu-popup');
     document.querySelectorAll('.bubble-menu-popup').forEach(p => p.classList.add('hidden'));
-    if (popup) popup.classList.toggle('hidden');
-    e.stopPropagation();
-    return;
-  } else if (!e.target.classList.contains('bubble-menu-item')) {
-    document.querySelectorAll('.bubble-menu-popup').forEach(p => p.classList.add('hidden'));
-  }
-
-  if (!e.target.classList.contains('bubble-menu-item')) return;
-
-
-  // determine action and chat id (support id or shortId)
-  const action = e.target.dataset.action;
-  const chatId = e.target.dataset.id || e.target.dataset.shortId || e.target.dataset.msgId;
-  if (!action) {
-    console.debug('bubble-menu: no action dataset on target', e.target);
+    popup.classList.toggle('hidden');
     return;
   }
-  console.debug('bubble-menu click', { action, chatId });
+  if (e.target.classList.contains('bubble-menu-item')) {
+    const action = e.target.dataset.action;
+    const mid = e.target.dataset.mid;
+    const messages = messagesByChat[currentChatId] || [];
+    const m = messages.find(x => x.id === mid);
+    if (!m) return;
 
-  // try to resolve chat object robustly
-  let chat = null;
-  if (chatId) {
-    // try exact id match or shortId match
-    chat = (Array.isArray(chats) && chats.find(c => String(c.id) === String(chatId))) ||
-           (Array.isArray(chats) && chats.find(c => String(c.shortId) === String(chatId)));
-  }
-
-  // fallback: if viewing a single chat, try currentChat or currentChatId if present
-  if (!chat) {
-    if (typeof currentChat !== 'undefined' && currentChat && (String(currentChat.id) === String(chatId) || String(currentChat.shortId) === String(chatId))) {
-      chat = currentChat;
-    } else if (typeof currentChatId !== 'undefined' && String(currentChatId) === String(chatId)) {
-      chat = (Array.isArray(chats) && chats.find(c => String(c.id) === String(currentChatId)));
-    } else if (!chat) {
-      // last resort: try to build minimal chat object from DOM (grab image src)
-      const bubble = e.target.closest('.image-bubble') || e.target.closest('.bubble') || e.target.closest('[data-id]');
-      if (bubble) {
-        const img = bubble.querySelector('img');
-        if (img && img.src) {
-          chat = { id: chatId || null, stegoUrl: img.src, shortId: chatId || null };
-          console.debug('bubble-menu: constructed chat from DOM', chat);
-        }
-      }
+    if (action === 'download') {
+      const a = document.createElement('a'); a.href = m.stegoUrl; a.download = `stego-${mid}.png`; a.click();
+    }
+    if (action === 'info') {
+      alert(`Sender: ${m.sender}\nCreated: ${new Date(m.createdAt).toLocaleString()}\nRead once: ${m.readOnce ? 'Yes' : 'No'}\nExpires: ${m.expiresAt ? new Date(m.expiresAt).toLocaleString() : 'Never'}`);
+    }
+    if (action === 'open') {
+      openingMessage = m;
+      popupPass.value = '';
+      passwordPopup.classList.remove('hidden');
     }
   }
-
-  if (!chat) {
-    console.warn('bubble-menu: could not resolve chat for action', { action, chatId });
-    return;
-  }
-if (action === 'open') {
-    openPasswordPopup(chat);
-  }
-  if (action === 'download') {
-    const a = document.createElement('a');
-    a.href = chat.stegoUrl;
-    a.download = `secretsnap-${chat.shortId}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-  if (action === 'info') {
-    openInfoPopup(chat);
-  }
-  
-  
-  if (action === 'delete') {
-    // Confirm deletion
-    if (!confirm('Delete this hidden image from this chat?')) {
-      return;
-    }
-
-    // Try to find the bubble element in the DOM
-    const bubbleEl =
-      e.target.closest('.image-bubble') ||
-      e.target.closest('.bubble') ||
-      e.target.closest('[data-msg-id]') ||
-      e.target.closest('[data-id]');
-
-    // Mark this stego URL as deleted for this session (so it does not re-render)
-    try {
-      if (typeof window !== 'undefined' && window.deletedStegoUrls && chat && chat.stegoUrl) {
-        window.deletedStegoUrls.add(chat.stegoUrl);
-        console.debug('bubble-menu: marked stegoUrl deleted (via chat object)', chat.stegoUrl);
-      }
-    } catch (err) {
-      console.error('Error tracking deleted stegoUrl:', err);
-    }
-
-    // Clear stego image from this chat object so future renders treat it as empty
-    try {
-      if (chat) {
-        chat.stegoUrl = null;
-        chat.lastPreview = 'Hidden image deleted';
-        chat.unread = false;
-      }
-    } catch (err) {
-      console.error('Error clearing chat stegoUrl:', err);
-    }
-
-    // Remove bubble element from DOM if present
-    if (bubbleEl && bubbleEl.remove) {
-      try {
-        bubbleEl.remove();
-      } catch (err) {
-        console.error('Error removing bubble element:', err);
-      }
-    }
-
-    // Refresh UI
-    try {
-      if (typeof renderChatList === 'function') renderChatList();
-      if (typeof renderChatView === 'function') renderChatView();
-    } catch (err) {
-      console.error('Error refreshing view after delete:', err);
-    }
-
-    return;
-  }
-
 });
 
-// open password popup for chat
-function openPasswordPopup(chat) {
-  popupPass.value = '';
-  passwordPopup.classList.remove('hidden');
-
-  if (popupOpenBtn) popupOpenBtn.onclick = async () => {
-    const password = popupPass.value.trim();
-    if (!password) return;
-
-    // decoy logic (UI only)
-    if (chat.decoy && chat.decoy.password && password === chat.decoy.password) {
-      messagePopupText.textContent = chat.decoy.message || '(No decoy message configured)';
-      messagePopup.classList.remove('hidden');
-      passwordPopup.classList.add('hidden');
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append('password', password);
-    const resImg = await fetch(chat.stegoUrl);
-    const blob = await resImg.blob();
-    fd.append('image', blob, 'chat.png');
-
-    const res = await fetch('/api/extract', { method: 'POST', body: fd });
-    const data = await res.json();
-
-    if (res.ok) {
-      const msg = data.message || '';
-      chat.lastPreview = msg.length > 20 ? msg.slice(0, 20) + '…' : msg;
-      chat.unread = false;
-      messagePopupText.textContent = msg;
-      messagePopup.classList.remove('hidden');
-
-      if (chat.selfDestruct) {
-        chat.stegoUrl = null;
-        chat.lastPreview = 'Message self-destructed';
-      }
-      renderChatList();
-      renderChatView();
-    } else {
-      alert(data.error || 'Error extracting message.');
-    }
+popupCancelBtn.onclick = () => passwordPopup.classList.add('hidden');
+popupOpenBtn.onclick = async () => {
+  if (!openingMessage) return;
+  const fd = new FormData();
+  fd.append('password', popupPass.value.trim());
+  fd.append('chat_id', currentChatId);
+  fd.append('message_id', openingMessage.id);
+  const blob = await (await fetch(openingMessage.stegoUrl)).blob();
+  fd.append('image', blob, 'chat.png');
+  try {
+    const data = await api('/api/extract', { method: 'POST', body: fd });
+    messagePopupText.textContent = data.message;
+    messagePopup.classList.remove('hidden');
     passwordPopup.classList.add('hidden');
-  };
+    await loadChats();
+    await loadMessages(currentChatId);
+    renderChatView();
+  } catch (e) {
+    alert(e.message);
+  }
+};
 
-  if (popupCancelBtn) popupCancelBtn.onclick = () => passwordPopup.classList.add('hidden');
-}
-
-// info popup
-function openInfoPopup(chat) {
-  const created = chat.createdAt ? new Date(chat.createdAt) : new Date();
-  const createdStr = created.toLocaleString();
-  const modeLabel = chat.mode === 'upload' ? 'User uploaded image' : 'Random system image';
-  const status = chat.stegoUrl ? (chat.unread ? 'Locked' : 'Opened') : 'No active stego image';
-
-  infoContent.innerHTML = `
-    <b>Chat partner:</b> ${chat.peerEmail}<br>
-    <b>Chat ID:</b> #${chat.shortId}<br>
-    <b>Cover Mode:</b> ${modeLabel}<br>
-    <b>Status:</b> ${status}<br>
-    <b>Created:</b> ${createdStr}<br>
-    ${chat.protected ? '<b>Chat protected with password.</b><br>' : ''}
-    ${chat.selfDestruct ? '<b>Self-destruct enabled.</b><br>' : ''}
-    ${chat.stegoUrl ? '<b>Stego URL:</b> <span style="word-break:break-all;">' + location.origin + chat.stegoUrl + '</span>' : ''}
-  `;
-  infoPopup.classList.remove('hidden');
-}
-
-if (infoCloseBtn) infoCloseBtn.onclick = () => infoPopup.classList.add('hidden');
-
-// message popup close
 messagePopupClose.onclick = () => messagePopup.classList.add('hidden');
 
-// initial
-renderChatList();
-renderChatView();
-
-
-
-// Group chat UI handlers (ensure present)
-document.addEventListener('DOMContentLoaded', function(){
-  const btnGroup = document.getElementById('btn-group-chat');
-  const popup = document.getElementById('group-chat-popup');
-  const cancel = document.getElementById('group-create-cancel');
-  const confirm = document.getElementById('group-create-confirm');
-  if(btnGroup && popup){
-    btnGroup.addEventListener('click', ()=> { popup.classList.remove('hidden'); popup.querySelector('#group-members-input').focus(); });
+btnExtract.onclick = async () => {
+  if (!extractImageInput.files[0]) return (extractResult.textContent = 'Choose image');
+  if (!extractPass.value.trim()) return (extractResult.textContent = 'Enter password');
+  const fd = new FormData();
+  fd.append('image', extractImageInput.files[0]);
+  fd.append('password', extractPass.value.trim());
+  try {
+    const data = await api('/api/extract', { method: 'POST', body: fd });
+    extractResult.textContent = 'Revealed: ' + data.message;
+  } catch (e) {
+    extractResult.textContent = e.message;
   }
-  if(cancel){
-    cancel.addEventListener('click', ()=> { popup.classList.add('hidden'); });
-  }
-  if(confirm){
-    confirm.addEventListener('click', async ()=> {
-      const membersRaw = document.getElementById('group-members-input').value.trim();
-      const name = document.getElementById('group-name-input').value.trim();
-      if(!membersRaw){ alert('Please enter at least one member email'); return; }
-      const members = membersRaw.split(',').map(s=>s.trim()).filter(Boolean);
-      const owner = (document.getElementById('current-user-label') && document.getElementById('current-user-label').textContent) || 'admin@gmail.com';
-      try{
-        const res = await fetch('/api/chats', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'group', name: name, members: members, owner: owner}) });
-        const data = await res.json();
-        if(data.status === 'ok'){
-          // ensure name populated
-          if(!data.chat.name || data.chat.name.trim()===''){
-            data.chat.name = data.chat.members && data.chat.members.length ? data.chat.members.join(', ') : (data.chat.owner || 'Group');
-          }
-          // add to local chats and re-render list if renderChatList exists
-          if(typeof chats !== 'undefined' && typeof renderChatList === 'function'){
-            chats.push(data.chat);
-            renderChatList();
-          }
-          popup.classList.add('hidden');
-        } else {
-          alert('Failed to create group: ' + (data.error || JSON.stringify(data)));
-        }
-      }catch(err){ console.error(err); alert('Error creating group'); }
-    });
-  }
-});
+};
 
-
-
-// Message options handlers (added to support Open/Download/Info/Delete)
-function downloadImage(filename, url){ 
-  // create link and click
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename || 'stego-image.png';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-function deleteMessageById(msgId){
-  // frontend-only: remove message from UI and optionally call backend (not implemented)
-  const el = document.querySelector('[data-msg-id="' + msgId + '"]');
-  if(el) el.remove();
-  // TODO: call backend to delete stored file/message if needed
-}
-
-function openMessageInNewTab(url){
-  window.open(url, '_blank');
-}
-
-function showMessageInfo(msg){
-  alert('Message info:\n' + JSON.stringify(msg, null, 2));
-}
+applyUiCloneTheme(localStorage.getItem('secretsnap_ui_clone') || 'default');
+bootstrap();

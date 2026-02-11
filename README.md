@@ -110,6 +110,11 @@ Contact: *(ff4056232@gmail.com)*
 
 ---
 
+
+## 🧭 Product Roadmap Ideas
+- See `docs/FEATURE_PROPOSALS.md` for a prioritized list of high-impact features to build next.
+
+---
 ## ⭐ Future Enhancements
 - Real server backend + user accounts  
 - Cloud-secured encrypted chat system  

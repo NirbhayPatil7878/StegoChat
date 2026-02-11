@@ -582,3 +582,104 @@ body.auth-body {
 .switch input:checked + .slider:before {
   transform: translateX(18px);
 }
+
+
+#hidden-msg-popup select,
+#hidden-msg-popup input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+/* Composer lock button */
+.composer-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.lock-btn {
+  width: 46px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: #2c2c2c;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.lock-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* UI clone themes */
+body.theme-whatsapp {
+  background: #0b141a;
+  color: #e9edef;
+}
+
+body.theme-whatsapp .sidebar {
+  background: #202c33;
+  border-right-color: #2a3942;
+}
+
+body.theme-whatsapp .main-header,
+body.theme-whatsapp .composer,
+body.theme-whatsapp .extract-bar {
+  background: #111b21;
+}
+
+body.theme-whatsapp .send-btn,
+body.theme-whatsapp .lock-btn {
+  background: #00a884;
+  border-color: #00a884;
+}
+
+body.theme-instagram {
+  background: linear-gradient(160deg, #2a1a4a 0%, #0f1026 55%, #22132f 100%);
+  color: #fff;
+}
+
+body.theme-instagram .sidebar {
+  background: rgba(20, 20, 28, 0.92);
+}
+
+body.theme-instagram .send-btn,
+body.theme-instagram .lock-btn {
+  background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+  border: none;
+}
+
+body.theme-instagram .chat-item.active {
+  background: rgba(131, 52, 175, 0.35);
+}
+
+body.theme-telegram {
+  background: #182533;
+  color: #fff;
+}
+
+body.theme-telegram .sidebar {
+  background: #17212b;
+  border-right-color: #243447;
+}
+
+body.theme-telegram .main {
+  background: #0e1621;
+}
+
+body.theme-telegram .send-btn,
+body.theme-telegram .lock-btn {
+  background: #2aabee;
+  border-color: #2aabee;
+}
+
+body.theme-telegram .chat-item.active {
+  background: #25303f;
+}
+
+.composer-actions-row .send-btn { flex: 1; }
+
