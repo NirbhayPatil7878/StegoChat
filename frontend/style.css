@@ -683,3 +683,36 @@ body.theme-telegram .chat-item.active {
 
 .composer-actions-row .send-btn { flex: 1; }
 
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: #3b3b3b;
+  color: #ffffff;
+}
+
+body.theme-whatsapp .brand-logo {
+  background: #00a884;
+  border-color: #00a884;
+  color: #10281f;
+}
+
+body.theme-instagram .brand-logo {
+  background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+  border: none;
+  color: #ffffff;
+}
+
+body.theme-telegram .brand-logo {
+  background: #2aabee;
+  border-color: #2aabee;
+  color: #0a2231;
+}

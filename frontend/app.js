@@ -15,6 +15,8 @@ const extractResult = document.getElementById('extract-result');
 const searchInput = document.getElementById('chat-search');
 const filterType = document.getElementById('chat-type-filter');
 const cloneSelect = document.getElementById('ui-clone-select');
+const brandNameEl = document.getElementById('app-brand-name');
+const brandLogoEl = document.getElementById('app-brand-logo');
 
 const btnUploadMode = document.getElementById('btn-upload');
 const btnRandomMode = document.getElementById('btn-random');
@@ -63,11 +65,20 @@ async function api(path, opts = {}) {
 
 
 function applyUiCloneTheme(theme) {
-  const valid = ['default', 'whatsapp', 'instagram', 'telegram'];
+  const themeMeta = {
+    default: { name: 'StegoChat', logo: 'S', title: 'StegoChat – Secure Chat' },
+    whatsapp: { name: 'WhatsApp', logo: 'WA', title: 'WhatsApp Clone + StegoChat' },
+    instagram: { name: 'Instagram', logo: 'IG', title: 'Instagram Clone + StegoChat' },
+    telegram: { name: 'Telegram', logo: 'TG', title: 'Telegram Clone + StegoChat' }
+  };
+  const valid = Object.keys(themeMeta);
   const next = valid.includes(theme) ? theme : 'default';
   document.body.classList.remove('theme-whatsapp', 'theme-instagram', 'theme-telegram');
   if (next !== 'default') document.body.classList.add(`theme-${next}`);
   if (cloneSelect) cloneSelect.value = next;
+  if (brandNameEl) brandNameEl.textContent = themeMeta[next].name;
+  if (brandLogoEl) brandLogoEl.textContent = themeMeta[next].logo;
+  document.title = themeMeta[next].title;
   localStorage.setItem('secretsnap_ui_clone', next);
 }
 
