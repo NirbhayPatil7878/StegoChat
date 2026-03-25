@@ -414,14 +414,14 @@ function addStegoImageToChat(stegoUrl, message, opts = {}) {
     <div class="relative group">
       <div class="bg-primary-container p-1 rounded-2xl overflow-hidden shadow-2xl">
         <img alt="Stego Image" class="w-full h-64 object-cover rounded-xl" src="${stegoUrl}" data-stego-url="${stegoUrl}"/>
-        <div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button class="px-2 py-1 text-xs rounded inspect-btn" data-url="${stegoUrl}">Inspect Metadata</button>
-          <button class="px-2 py-1 text-xs rounded extract-btn" data-url="${stegoUrl}">Extract Hidden Data</button>
-          <a class="px-2 py-1 text-xs rounded download-btn" href="${stegoUrl}" download>Download</a>
-        </div>
-        <div class="absolute top-4 left-4 bg-surface/80 backdrop-blur-md px-2 py-1.5 rounded-lg flex items-center gap-2 border border-secondary/30">
+        <div class="absolute top-4 left-4 badge-overlay badge" aria-hidden="true">
           <span class="material-symbols-outlined text-secondary text-base" data-weight="fill">visibility_off</span>
           <span class="text-[10px] font-bold text-secondary uppercase tracking-tighter">Hidden Payload Embedded</span>
+        </div>
+        <div class="actions">
+          <button class="px-2 py-1 text-xs rounded inspect-btn" data-url="${stegoUrl}" title="Inspect (ℹ)">ℹ</button>
+          <button class="px-2 py-1 text-xs rounded extract-btn" data-url="${stegoUrl}" title="Extract (🔓)">🔓</button>
+          <a class="px-2 py-1 text-xs rounded download-btn" href="${stegoUrl}" download title="Download (⬇)">⬇</a>
         </div>
       </div>
     </div>
