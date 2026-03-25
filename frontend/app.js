@@ -613,6 +613,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   if (extractModal) {
     extractModal.addEventListener('click', (e) => { if (e.target === extractModal) closeModal(); });
+    // ESC to close
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
   }
 
   // Attach popup: show options to use my image or fetch random
