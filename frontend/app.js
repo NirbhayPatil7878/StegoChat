@@ -57,14 +57,25 @@ function showModal(title, body) {
   if (!modal) return;
   const titleEl = document.getElementById('modal-title');
   const bodyEl = document.getElementById('modal-body');
+  // set title
   if (titleEl) titleEl.textContent = title || '';
-  if (bodyEl) bodyEl.innerHTML = (body || '').toString().replace(/\n/g, '<br/>');
+  // prefer plain text into .result-text for safe display
+  if (bodyEl) {
+    bodyEl.textContent = (body || '').toString();
+  }
+  // ensure modal visible
   modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+  // trap focus roughly: focus the close button
+  setTimeout(() => {
+    const closeBtn = document.getElementById('modal-close'); if (closeBtn) closeBtn.focus();
+  }, 50);
 }
 function closeModal() {
   const modal = document.getElementById('extract-modal');
   if (!modal) return;
   modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
 }
 function showToast(msg, type='info') {
   const container = document.getElementById('toasts');

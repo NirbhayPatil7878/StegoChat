@@ -642,6 +642,17 @@ html, body { height: 100%; overflow-y: auto; }
 .password-popup.hidden { display:none }
 .popup-box { background: #262626; padding: 20px; border-radius: 8px; width: 320px; color: #e6e6e6; }
 .popup-box.wide { width: 520px }
+
+/* New extraction modal overlay (centered floating modal) */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.modal-overlay.hidden { display: none; }
+.modal { background: #0B0F14; border-radius: 16px; padding: 20px; width: 360px; max-width: 92%; box-shadow: 0 8px 30px rgba(0,229,255,0.06); animation: fadeIn 0.28s ease both; color: #dfe7ff; }
+.modal h3 { margin: 0 0 8px 0; }
+.modal .result-text { white-space: pre-wrap; word-break: break-word; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+.modal .close-btn { }
+
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
 #toasts { pointer-events: none }
 .toast { transition: opacity 0.4s ease; pointer-events: auto }
 .toast.bg-error { background: #93000a; color: white }

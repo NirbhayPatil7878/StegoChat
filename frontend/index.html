@@ -254,12 +254,13 @@ Wipe Transmission History
 <span class="text-[10px]">Vault</span>
 </a>
 </nav>
-  <div id="extract-modal" class="password-popup hidden">
-    <div class="popup-box wide">
+  <div id="extract-modal" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <h3 id="modal-title" class="text-lg font-bold">Extraction Result</h3>
-      <div id="modal-body" class="mt-2 text-sm text-on-surface-variant"></div>
-      <div class="mt-4 flex gap-2">
-        <button id="modal-close" class="px-4 py-2 bg-surface-container-high rounded-md">Close</button>
+      <div id="modal-body" class="mt-2 text-sm text-on-surface-variant result-text"></div>
+      <div class="mt-4 flex gap-2 justify-end">
+        <button id="modal-copy" class="px-3 py-2 bg-surface-container-high rounded-md">Copy</button>
+        <button id="modal-close" class="px-4 py-2 bg-primary rounded-md text-on-primary-container font-bold">Close</button>
       </div>
     </div>
   </div>
