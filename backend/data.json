@@ -13,5 +13,31 @@
       "lastPreview": "",
       "protected": false
     }
-  ]
+  ],
+  "dead_drops": {
+    "776734d654b941b2": {
+      "message": "anonymous hello",
+      "createdAt": 1774354750492,
+      "expiresAt": 1774361950492,
+      "used": true
+    },
+    "244cefd32b384f25": {
+      "message": "hi iam nirbhay",
+      "createdAt": 1774354857108,
+      "expiresAt": 1774441257108,
+      "used": true
+    },
+    "27a895bbab374dda": {
+      "message": "hi",
+      "createdAt": 1774356196035,
+      "expiresAt": 1774442596035,
+      "used": true
+    },
+    "97185b0b3d894057": {
+      "message": "secret dead drop",
+      "createdAt": 1774397744256,
+      "expiresAt": 1774401344256,
+      "used": true
+    }
+  }
 }

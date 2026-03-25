@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>StegoChat - Settings</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#31394d",
+            "tertiary-container": "#8990a8",
+            "on-tertiary-fixed-variant": "#3f465c",
+            "surface-container": "#171f33",
+            "surface-tint": "#c0c1ff",
+            "on-primary-fixed-variant": "#2f2ebe",
+            "primary": "#c0c1ff",
+            "on-surface": "#dae2fd",
+            "outline-variant": "#464554",
+            "on-background": "#dae2fd",
+            "surface-container-low": "#131b2e",
+            "outline": "#908fa0",
+            "on-secondary-fixed": "#002109",
+            "error-container": "#93000a",
+            "on-primary": "#1000a9",
+            "background": "#0b1326",
+            "secondary-fixed": "#6bff8f",
+            "surface-container-lowest": "#060e20",
+            "primary-fixed": "#e1e0ff",
+            "surface-dim": "#0b1326",
+            "surface-container-highest": "#2d3449",
+            "on-tertiary-container": "#22293d",
+            "tertiary": "#bec6e0",
+            "on-primary-container": "#0d0096",
+            "primary-container": "#8083ff",
+            "on-error-container": "#ffdad6",
+            "on-tertiary": "#283044",
+            "primary-fixed-dim": "#c0c1ff",
+            "on-secondary": "#003915",
+            "tertiary-fixed-dim": "#bec6e0",
+            "inverse-primary": "#494bd6",
+            "inverse-on-surface": "#283044",
+            "on-secondary-container": "#004119",
+            "secondary": "#4ae176",
+            "surface": "#0b1326",
+            "on-tertiary-fixed": "#131b2e",
+            "on-surface-variant": "#c7c4d7",
+            "surface-container-high": "#222a3d",
+            "inverse-surface": "#dae2fd",
+            "surface-variant": "#2d3449",
+            "secondary-fixed-dim": "#4ae176",
+            "on-secondary-fixed-variant": "#005321",
+            "tertiary-fixed": "#dae2fd",
+            "secondary-container": "#00b954",
+            "on-error": "#690005",
+            "on-primary-fixed": "#07006c",
+            "error": "#ffb4ab"
+          },
+          fontFamily: {
+            "headline": ["Manrope"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3 {
+      font-family: 'Manrope', sans-serif;
+    }
+    .glass-panel {
+      background: rgba(45, 52, 73, 0.6);
+      backdrop-filter: blur(20px);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+  <aside class="hidden md:flex flex-col h-screen w-64 bg-[#0b1326] text-[#c0c1ff] border-r border-[#c0c1ff]/15 py-8 px-4">
+    <div class="flex items-center gap-3 mb-12 px-2">
+      <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
+        <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">shield_lock</span>
+      </div>
+      <div>
+        <h2 class="text-[#c0c1ff] font-black tracking-tight">The Obsidian Vault</h2>
+        <p class="text-xs opacity-60">Secure Tunnel Active</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 space-y-2">
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] rounded-lg transition-all" href="/chat">
+        <span class="material-symbols-outlined">chat_bubble</span>
+        Messages
+      </a>
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] rounded-lg transition-all" href="/embed.html">
+        <span class="material-symbols-outlined">layers</span>
+        Embed
+      </a>
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] rounded-lg transition-all" href="/extract.html">
+        <span class="material-symbols-outlined">visibility_off</span>
+        Extract
+      </a>
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff] bg-[#c0c1ff]/10 rounded-lg border-l-2 border-[#4ae176] transition-all" href="/settings.html">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">tune</span>
+        Settings
+      </a>
+    </nav>
+
+    <div class="mt-auto pt-8 border-t border-[#c0c1ff]/10 space-y-2">
+      <a class="flex items-center gap-3 px-4 py-2 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] rounded-lg transition-all" href="#">
+        <span class="material-symbols-outlined text-lg">help_outline</span>
+        Help
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] rounded-lg transition-all" href="/">
+        <span class="material-symbols-outlined text-lg">logout</span>
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto">
+    <header class="bg-[#0b1326]/60 backdrop-blur-xl text-[#c0c1ff] flex justify-between items-center w-full px-6 py-4 shadow-[0_40px_40px_rgba(192,193,255,0.06)]">
+      <div class="flex items-center gap-4">
+        <h1 class="text-xl font-bold tracking-tighter text-[#c0c1ff]">StegoChat</h1>
+        <div class="h-4 w-[1px] bg-[#c0c1ff]/20"></div>
+        <span class="text-xs font-medium bg-secondary/10 text-secondary px-3 py-1 rounded-full flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+          Vault: Encrypted
+        </span>
+      </div>
+      <div class="flex items-center gap-6">
+        <div class="hidden lg:flex items-center bg-surface-container-lowest px-4 py-1.5 rounded-full border border-outline-variant/15">
+          <span class="material-symbols-outlined text-sm opacity-60 mr-2">search</span>
+          <input class="bg-transparent border-none text-xs focus:ring-0 w-48 text-on-surface" placeholder="Search settings..." type="text" />
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="material-symbols-outlined text-[#c0c1ff]/60 hover:text-[#4ae176] transition-colors cursor-pointer">notifications</span>
+          <span class="material-symbols-outlined text-[#c0c1ff]/60 hover:text-[#4ae176] transition-colors cursor-pointer">shield_lock</span>
+          <div class="w-8 h-8 rounded-full overflow-hidden border border-primary/30">
+            <img alt="User profile with encryption status pulse" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSI6WBcf5XEU9wjlVW1_RCtU4hfmnLKo4yx36fCNE4nwTg3JK8pgzh3Xi-Fu5F1ytgifSh4B2uQOGt_vCFVIcVu3brR9VJaHBbCoK9nkZcyj6SwkXv7eJxnHQZzgNH2kGLCXinxluHreijFEFPdkbuTlqZJPfae3_AYpyQ7E8U4l7glenJIrbUsTezcWr5ruocGHVCiZZaTwXcAdiLTBBGG3ic5YDS3k3X-TiUgW7HKmkKVYkoXZ9QKxSfQhOXDwiudq7z7DJYAg" />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-5xl mx-auto px-6 py-12">
+      <section class="mb-12">
+        <div class="relative overflow-hidden bg-gradient-to-br from-surface-container-high to-surface-container-low rounded-xl p-8 border border-outline-variant/10">
+          <div class="absolute top-0 right-0 p-8 opacity-10">
+            <span class="material-symbols-outlined text-9xl">verified_user</span>
+          </div>
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div>
+              <p class="uppercase tracking-widest text-secondary font-bold mb-2 text-xs">Current Protection Level</p>
+              <h2 class="text-4xl font-extrabold tracking-tight text-on-surface mb-2">Maximum Security</h2>
+              <p class="text-on-surface-variant max-w-md">Your Obsidian Vault is currently operating at peak encryption standards with RSA-4096 and LSB parity checks active.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-surface-container-lowest/50 p-4 rounded-lg border border-outline-variant/10 text-center">
+                <p class="text-on-surface-variant mb-1 text-sm">Encrypted Items</p>
+                <p class="text-2xl font-bold text-primary">1,284</p>
+              </div>
+              <div class="bg-surface-container-lowest/50 p-4 rounded-lg border border-outline-variant/10 text-center">
+                <p class="text-on-surface-variant mb-1 text-sm">Tunnel Uptime</p>
+                <p class="text-2xl font-bold text-secondary">99.9%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8 space-y-8">
+          <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+            <div class="flex items-center gap-3 mb-6">
+              <span class="material-symbols-outlined text-primary">enhanced_encryption</span>
+              <h3 class="text-lg font-bold">Encryption Preferences</h3>
+            </div>
+            <div class="space-y-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="font-semibold text-on-surface">Standard Protocol</p>
+                  <p class="text-sm text-on-surface-variant">The primary cipher used for message wrapping.</p>
+                </div>
+                <select class="bg-surface-container-highest border-none rounded-lg text-sm text-primary focus:ring-primary/50 transition-all px-4 py-2">
+                  <option>AES-256 (Recommended)</option>
+                  <option>RSA-4096</option>
+                  <option>ChaCha20</option>
+                </select>
+              </div>
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="font-semibold text-on-surface">Default Embedding Type</p>
+                  <p class="text-sm text-on-surface-variant">Method of hiding data within media files.</p>
+                </div>
+                <select class="bg-surface-container-highest border-none rounded-lg text-sm text-primary focus:ring-primary/50 transition-all px-4 py-2">
+                  <option>Least Significant Bit (LSB)</option>
+                  <option>Parity Check</option>
+                  <option>Spread Spectrum</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+            <div class="flex items-center gap-3 mb-6">
+              <span class="material-symbols-outlined text-secondary">lock_open</span>
+              <h3 class="text-lg font-bold">Privacy &amp; Security</h3>
+            </div>
+            <div class="space-y-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="font-semibold text-on-surface">Auto-delete messages</p>
+                  <p class="text-sm text-on-surface-variant">Wipe content after 24 hours of inactivity.</p>
+                </div>
+                <button class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full bg-secondary-container">
+                  <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow mt-0.5"></span>
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="font-semibold text-on-surface">Passphrase lock</p>
+                  <p class="text-sm text-on-surface-variant">Require a vault key on every application launch.</p>
+                </div>
+                <button class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full bg-surface-container-highest">
+                  <span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-on-surface-variant shadow mt-0.5"></span>
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="font-semibold text-on-surface">Biometric Authentication</p>
+                  <p class="text-sm text-on-surface-variant">Use system fingerprint or face scan for access.</p>
+                </div>
+                <button class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full bg-secondary-container">
+                  <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow mt-0.5"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-8">
+          <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+            <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-6">Interface</h3>
+            <div class="space-y-4">
+              <div class="p-4 rounded-lg bg-surface-container-lowest border border-primary/20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary">dark_mode</span>
+                  <span class="text-sm font-medium">Dark Mode</span>
+                </div>
+                <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+              </div>
+              <div class="p-4 rounded-lg bg-surface-container-lowest/30 border border-outline-variant/10 flex items-center justify-between hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">light_mode</span>
+                  <span class="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Light Mode</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-low rounded-xl p-6 border border-error/10">
+            <h3 class="text-sm font-bold text-error uppercase tracking-widest mb-4">Danger Zone</h3>
+            <p class="text-xs text-on-surface-variant mb-6">Actions performed here are permanent and cannot be reversed by system administrators.</p>
+            <div class="space-y-3">
+              <button class="w-full py-2.5 rounded-lg border border-error/30 text-error text-sm font-medium hover:bg-error/5 transition-colors">
+                Wipe Local Database
+              </button>
+              <button class="w-full py-2.5 rounded-lg bg-error text-on-error text-sm font-bold hover:brightness-110 transition-all">
+                Terminate Identity
+              </button>
+            </div>
+          </div>
+
+          <div class="relative group rounded-xl overflow-hidden aspect-video">
+            <img alt="Cybersecurity visual" class="object-cover w-full h-full brightness-50 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfbEbqMi0Y7NMN3hIGsBoIq_wj3zlQggZDTGrwN4GX7dH8yORrk51FwZ3h4KRg5PJE8MEnzIFW99xQTGI2LXl3lwLy3Q7Uztc8fNJYCKd4osbKaVaMzIcYIorD061v6n2JvgMkZS8KfsrasnGvJ7SG-OkPApezsUcSEDwY8NjE0b-gM0ElM_6wSTfaWwXypkrTgKPYT3yNcnhZCdnxkpx2Hw7GWpgjsVBN1WExoH6A8nOi4madQ6r1mTg_Yu5BuCOl0Yw7yTQ_PQ" />
+            <div class="absolute inset-0 p-6 flex flex-col justify-end bg-gradient-to-t from-background to-transparent">
+              <p class="text-xs font-bold text-primary mb-1">PRO TIP</p>
+              <p class="text-sm leading-snug">Switch to RSA-4096 for long-term archival storage security.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#0b1326] flex justify-around items-center py-3 z-50">
+    <a class="flex flex-col items-center gap-1 text-[#c0c1ff]/60" href="/chat">
+      <span class="material-symbols-outlined">chat_bubble</span>
+      <span class="text-[10px]">Chats</span>
+    </a>
+    <a class="flex flex-col items-center gap-1 text-[#c0c1ff]/60" href="/embed.html">
+      <span class="material-symbols-outlined">layers</span>
+      <span class="text-[10px]">Embed</span>
+    </a>
+    <a class="flex flex-col items-center gap-1 text-[#c0c1ff] font-bold" href="/settings.html">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">tune</span>
+      <span class="text-[10px]">Settings</span>
+    </a>
+    <a class="flex flex-col items-center gap-1 text-[#c0c1ff]/60" href="/">
+      <span class="material-symbols-outlined">person</span>
+      <span class="text-[10px]">Profile</span>
+    </a>
+  </nav>
+</body>
+</html>

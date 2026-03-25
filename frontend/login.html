@@ -1,50 +1,178 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SecretSnap – Login</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body class="auth-body">
-  <div class="auth-card">
-    <div class="auth-icon">🔒</div>
-    <h2>SecretSnap</h2>
-    <p class="auth-subtitle">Hide secret messages in images with steganography</p>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>StegoChat - Welcome to the Vault</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#31394d",
+            "tertiary-container": "#8990a8",
+            "on-tertiary-fixed-variant": "#3f465c",
+            "surface-container": "#171f33",
+            "surface-tint": "#c0c1ff",
+            "on-primary-fixed-variant": "#2f2ebe",
+            "primary": "#c0c1ff",
+            "on-surface": "#dae2fd",
+            "outline-variant": "#464554",
+            "on-background": "#dae2fd",
+            "surface-container-low": "#131b2e",
+            "outline": "#908fa0",
+            "background": "#0b1326",
+            "surface-container-lowest": "#060e20",
+            "surface-container-high": "#222a3d",
+            "surface-container-highest": "#2d3449",
+            "surface-variant": "#2d3449",
+            "secondary": "#4ae176",
+            "secondary-container": "#00b954",
+            "error": "#ffb4ab",
+            "error-container": "#93000a",
+            "on-error-container": "#ffdad6",
+            "on-surface-variant": "#c7c4d7"
+          },
+          fontFamily: {
+            headline: ["Manrope", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #0b1326;
+    }
 
-    <div class="auth-tabs">
-      <button id="tab-login" class="auth-tab active">Login</button>
-      <button id="tab-register" class="auth-tab">Register</button>
+    .glass-card {
+      background: rgba(45, 52, 73, 0.4);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(192, 193, 255, 0.15);
+    }
+
+    .text-glow {
+      text-shadow: 0 0 20px rgba(192, 193, 255, 0.4);
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+
+    .auth-form.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex items-center justify-center overflow-hidden selection:bg-primary/30">
+  <div class="fixed inset-0 z-0 pointer-events-none">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(192,193,255,0.08)_0%,transparent_50%)]"></div>
+    <div class="absolute inset-0 opacity-20" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuCNWq-qciKJ_ZiWJ6xVUi1arsnn_AUQGTmOC90kVH0q-cMFVKrJT_5szbbzJstkGexTd7rguJcTyNJPUS8w75mtm96HgT6KbggpIqKve1f3tnfraQxPhbSujgkbg66s5lo7poSjsAnottJQEknrfDq6x0o1QOal4cxZg_dpU2S7c3tRzmnY8LPb8-mF7BG7FRPlIxLJqRALE9oNaYDoA9RgmVuqiFrokaH7M0CfBf5zELUL4C7suejsRsHNhfOtw_eeEy7XCkUkIQ');"></div>
+    <div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-secondary/5 rounded-full blur-[120px]"></div>
+  </div>
+
+  <main class="relative z-10 w-full max-w-md px-6 flex flex-col items-center">
+    <div class="mb-12 text-center">
+      <div class="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-2xl bg-gradient-to-tr from-primary to-surface-tint p-[1px] shadow-[0_0_40px_rgba(192,193,255,0.15)]">
+        <div class="w-full h-full bg-surface-container rounded-[15px] flex items-center justify-center">
+          <span class="material-symbols-outlined text-4xl text-primary">shield_lock</span>
+        </div>
+      </div>
+      <h1 class="font-headline text-5xl font-extrabold tracking-tighter text-primary text-glow mb-2">StegoChat</h1>
+      <p class="font-body text-on-surface-variant/80 tracking-wide text-sm uppercase">Hide your message in plain sight</p>
     </div>
 
-    <form id="login-form" class="auth-form">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="you@example.com" required>
+    <div class="w-full glass-card rounded-2xl p-8 shadow-[0_40px_40px_rgba(0,0,0,0.4)]">
+      <div class="flex gap-2 p-1 rounded-full bg-surface-container-low mb-6">
+        <button id="tab-login" class="auth-tab flex-1 rounded-full bg-primary text-[#1000a9] py-2 text-sm font-semibold">Login</button>
+        <button id="tab-register" class="auth-tab flex-1 rounded-full text-on-surface-variant py-2 text-sm font-semibold">Register</button>
+      </div>
 
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••" required>
+      <form id="login-form" class="auth-form space-y-5">
+        <div class="space-y-2">
+          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Identity</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 group-focus-within:text-primary transition-colors">fingerprint</span>
+            <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 pl-12 pr-4 rounded-lg transition-all" id="login-email" placeholder="you@example.com" required type="email">
+          </div>
+        </div>
 
-      <button type="submit" class="auth-btn">Login</button>
-    </form>
+        <div class="space-y-2">
+          <div class="flex justify-between items-center px-1">
+            <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase">Access Key</label>
+            <span class="font-label text-[10px] text-on-surface-variant">Demo Vault</span>
+          </div>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 group-focus-within:text-primary transition-colors">key</span>
+            <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 pl-12 pr-4 rounded-lg transition-all" id="login-password" placeholder="••••••••••••" required type="password">
+          </div>
+        </div>
 
-    <form id="register-form" class="auth-form hidden">
-      <label>Email</label>
-      <input type="email" id="reg-email" required>
+        <div class="flex items-center gap-3 py-2 px-3 bg-secondary/5 rounded-full w-fit">
+          <div class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+          </div>
+          <span class="text-[11px] font-medium text-secondary/90 tracking-tight">Active Encryption Tunnel Ready</span>
+        </div>
 
-      <label>Username</label>
-      <input type="text" id="reg-username" required>
+        <button class="w-full bg-gradient-to-r from-primary to-surface-tint hover:brightness-110 active:scale-[0.98] transition-all py-4 rounded-xl text-[#0d0096] font-headline font-bold text-sm shadow-[0_8px_20px_rgba(192,193,255,0.2)]" type="submit">Enter the Vault</button>
+      </form>
 
-      <label>Password</label>
-      <input type="password" id="reg-password" required>
+      <form id="register-form" class="auth-form hidden space-y-5">
+        <div class="space-y-2">
+          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Email</label>
+          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-email" placeholder="vault@stegochat.dev" required type="email">
+        </div>
 
-      <label>Confirm Password</label>
-      <input type="password" id="reg-confirm" required>
+        <div class="space-y-2">
+          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Alias</label>
+          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-username" placeholder="ShadowFox" required type="text">
+        </div>
 
-      <button type="submit" class="auth-btn">Create Account</button>
-    </form>
+        <div class="space-y-2">
+          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Key</label>
+          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-password" placeholder="Create a secret key" required type="password">
+        </div>
 
-    <p class="auth-hint">Demo only – accounts are stored in browser storage.</p>
-  </div>
+        <div class="space-y-2">
+          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Confirm Vault Key</label>
+          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-confirm" placeholder="Repeat your secret key" required type="password">
+        </div>
+
+        <button class="w-full bg-gradient-to-r from-primary to-surface-tint hover:brightness-110 active:scale-[0.98] transition-all py-4 rounded-xl text-[#0d0096] font-headline font-bold text-sm shadow-[0_8px_20px_rgba(192,193,255,0.2)]" type="submit">Create Identity</button>
+      </form>
+    </div>
+
+    <footer class="mt-12 flex flex-col items-center gap-6">
+      <div class="flex items-center gap-8">
+        <div class="flex flex-col items-center">
+          <span class="material-symbols-outlined text-primary/30 text-xl">verified_user</span>
+          <span class="font-label text-[9px] text-on-surface-variant/40 mt-1">E2EE</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="material-symbols-outlined text-primary/30 text-xl">visibility_off</span>
+          <span class="font-label text-[9px] text-on-surface-variant/40 mt-1">HIDDEN</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="material-symbols-outlined text-primary/30 text-xl">memory</span>
+          <span class="font-label text-[9px] text-on-surface-variant/40 mt-1">OBSIDIAN</span>
+        </div>
+      </div>
+      <p class="text-[11px] text-on-surface-variant/60 text-center">Demo only. Accounts remain stored in browser storage for this local prototype.</p>
+    </footer>
+  </main>
+
+  <div class="fixed top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-primary/10 to-transparent pointer-events-none"></div>
+  <div class="fixed top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none"></div>
 
   <script>
     const tabLogin = document.getElementById('tab-login');
@@ -52,19 +180,20 @@
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
 
-    tabLogin.onclick = () => {
-      tabLogin.classList.add('active');
-      tabRegister.classList.remove('active');
-      loginForm.classList.remove('hidden');
-      registerForm.classList.add('hidden');
-    };
+    function activateTab(mode) {
+      const loginActive = mode === 'login';
+      tabLogin.classList.toggle('bg-primary', loginActive);
+      tabLogin.classList.toggle('text-[#1000a9]', loginActive);
+      tabLogin.classList.toggle('text-on-surface-variant', !loginActive);
+      tabRegister.classList.toggle('bg-primary', !loginActive);
+      tabRegister.classList.toggle('text-[#1000a9]', !loginActive);
+      tabRegister.classList.toggle('text-on-surface-variant', loginActive);
+      loginForm.classList.toggle('hidden', !loginActive);
+      registerForm.classList.toggle('hidden', loginActive);
+    }
 
-    tabRegister.onclick = () => {
-      tabRegister.classList.add('active');
-      tabLogin.classList.remove('active');
-      registerForm.classList.remove('hidden');
-      loginForm.classList.add('hidden');
-    };
+    tabLogin.onclick = () => activateTab('login');
+    tabRegister.onclick = () => activateTab('register');
 
     function getUsers() {
       return JSON.parse(localStorage.getItem('secretsnap_users') || '[]');
@@ -86,14 +215,14 @@
         return;
       }
       const users = getUsers();
-      if (users.find(u => u.email === email)) {
+      if (users.find((user) => user.email === email)) {
         alert('User already exists');
         return;
       }
       users.push({ email, username, password: pw });
       saveUsers(users);
-      alert('Account created! Please login.');
-      tabLogin.click();
+      alert('Account created. Enter the vault with your new identity.');
+      activateTab('login');
     };
 
     loginForm.onsubmit = (e) => {
@@ -101,7 +230,7 @@
       const email = document.getElementById('login-email').value.trim();
       const pw = document.getElementById('login-password').value;
       const users = getUsers();
-      const user = users.find(u => u.email === email && u.password === pw);
+      const user = users.find((entry) => entry.email === email && entry.password === pw);
       if (!user) {
         alert('Invalid credentials');
         return;

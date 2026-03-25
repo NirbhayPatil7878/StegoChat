@@ -582,3 +582,59 @@ body.auth-body {
 .switch input:checked + .slider:before {
   transform: translateX(18px);
 }
+
+/* Message animation */
+.animate-message-in { animation: stego-slide-in .28s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes stego-slide-in { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Overlay buttons on media messages */
+.inspect-btn, .extract-btn, .download-btn {
+  border: none;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.extract-btn { background: #4ae176; color: #031409; }
+.inspect-btn { background: rgba(74,74,74,0.9); color: #e6e6e6; }
+.download-btn { background: rgba(255,255,255,0.06); color: #e6e6e6; display:inline-flex; align-items:center; }
+
+/* Drag over composer */
+footer.drag-over, .drag-over { outline: 2px dashed rgba(74,225,118,0.6); outline-offset: 4px; }
+
+/* File preview */
+#file-preview img { border-radius: 8px; }
+#file-preview { transition: opacity .2s ease; }
+
+/* Cover thumbnail shown above composer when an image is selected */
+#cover-thumbnail { display: flex; align-items: center; gap: 12px; }
+#cover-thumbnail img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
+#cover-thumbnail .text-sm { color: #dfe7ff; }
+#cover-thumbnail .text-xs { color: #bdbdbd; }
+#cover-thumbnail button { border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+#cover-thumbnail button.bg-error { background: #93000a; color: white; }
+#cover-thumbnail button.bg-surface-container-high { background: #2d3449; color: #dfe7ff; }
+
+/* Small badges */
+.badge { font-size: 10px; padding: 3px 6px; border-radius: 999px; background: rgba(255,255,255,0.04); color: #dfe7ff; }
+
+/* Global scrolling */
+html, body { height: 100%; overflow-y: auto; }
+
+/* Modal and toasts */
+.password-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:60; }
+.password-popup.hidden { display:none }
+.popup-box { background: #262626; padding: 20px; border-radius: 8px; width: 320px; color: #e6e6e6; }
+.popup-box.wide { width: 520px }
+#toasts { pointer-events: none }
+.toast { transition: opacity 0.4s ease; pointer-events: auto }
+.toast.bg-error { background: #93000a; color: white }
+
+/* Stealth embed panel scroll */
+#stealth-panel { max-height: 80vh; overflow-y: auto; }
+#stealth-panel .mt-3 { /* ensure previews can wrap */ }
+
+/* Ensure main chat area doesn't block page scroll */
+main { min-height: 100vh; }
+
+

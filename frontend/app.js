@@ -1,635 +1,937 @@
-
-let mode = 'upload';
-
-// Track deleted stego image URLs for UI-only deletion persistence (frontend only)
-if (typeof window !== 'undefined') {
-  if (!window.deletedStegoUrls) {
-    window.deletedStegoUrls = new Set();
-  }
-}
-
-async function loadChatsFromServer(){
-  try{
-    const res = await fetch('/api/chats');
-    const data = await res.json();
-    if(data.status==='ok' && Array.isArray(data.chats)){
-      chats = data.chats;
-      renderChatList();
-    }
-  }catch(e){
-    console.error('Failed to load chats', e);
-  }
-}
-document.addEventListener('DOMContentLoaded', ()=>{
-  loadChatsFromServer();
-});
+// StegoChat - Core Application Logic
+// DO NOT MODIFY UI DESIGN - Only functionality
 
 let chats = [];
 let currentChatId = null;
+let useRandomImage = false;
+let deadDropMode = false;
 
-// elements
-const btnUploadMode = document.getElementById('btn-upload');
-const btnRandomMode = document.getElementById('btn-random');
-
-const chatListEl = document.getElementById('chat-list');
-const chatViewEl = document.getElementById('chat-view');
-const chatTitleEl = document.getElementById('chat-title');
-const embedStatus = document.getElementById('embed-status');
-
-const extractImageInput = document.getElementById('extract-image');
-const extractPass = document.getElementById('extract-pass');
-const btnExtract = document.getElementById('btn-extract');
-const extractResult = document.getElementById('extract-result');
-
-const btnNewChat = document.getElementById('btn-new-chat');
-const newChatPopup = document.getElementById('new-chat-popup');
-const newChatEmail = document.getElementById('new-chat-email');
-const newChatProtect = document.getElementById('new-chat-protect');
-const newChatPassword = document.getElementById('new-chat-password');
-const newChatCreate = document.getElementById('new-chat-create');
-const newChatCancel = document.getElementById('new-chat-cancel');
-
-const passwordPopup = document.getElementById('password-popup');
-const popupPass = document.getElementById('popup-pass');
-const popupOpenBtn = document.getElementById('popup-open-btn');
-const popupCancelBtn = document.getElementById('popup-cancel-btn');
-
-const infoPopup = document.getElementById('info-popup');
-const infoContent = document.getElementById('info-content');
-const infoCloseBtn = document.getElementById('info-close-btn');
-
-const messagePopup = document.getElementById('message-popup');
-const messagePopupText = document.getElementById('message-popup-text');
-const messagePopupClose = document.getElementById('message-popup-close');
-
-const hiddenPopup = document.getElementById('hidden-msg-popup');
-const hmImage = document.getElementById('hm-image');
-const hmMessage = document.getElementById('hm-message');
-const hmPassword = document.getElementById('hm-password');
-const hmDecoyToggle = document.getElementById('hm-decoy-toggle');
-const hmDecoySection = document.getElementById('hm-decoy-section');
-const hmDecoyPass = document.getElementById('hm-decoy-pass');
-const hmDecoyMessage = document.getElementById('hm-decoy-message');
-const hmSelfDestruct = document.getElementById('hm-self-destruct');
-const hmSendBtn = document.getElementById('hm-send-btn');
-const hmCancelBtn = document.getElementById('hm-cancel-btn');
-const btnOpenHiddenPopup = document.getElementById('btn-open-hidden-popup');
-
-// show current user
-const userLabel = document.getElementById('current-user-label');
-try {
-  const currentUser = JSON.parse(sessionStorage.getItem('secretsnap_current_user') || 'null');
-  if (currentUser) {
-    userLabel.textContent = currentUser.email;
-  } else {
-    userLabel.textContent = 'Guest';
+// Helper: extract hidden data from an image URL by fetching and POSTing to backend
+async function extractImageUrl(url, password = '') {
+  try {
+    const resBlob = await fetch(url);
+    const blob = await resBlob.blob();
+    const fd = new FormData();
+    fd.append('image', blob, url.split('/').pop());
+    fd.append('password', password || '');
+    // show temporary loading message
+    addMessageToChat('incoming', 'Extracting hidden payload...', new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    const res = await fetch('/api/extract', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      // show result in modal
+      showModal('Extraction result', data.message);
+      addMessageToChat('incoming', 'Extracted payload (see details)', new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), true);
+    } else {
+      addMessageToChat('incoming', 'No hidden payload found', new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+      showToast('Extract failed: ' + (data.error || 'No hidden message found'), 'error');
+    }
+  } catch (e) {
+    console.error('extractImageUrl error', e);
+    showToast('Network error during extraction', 'error');
   }
-} catch (e) {
-  userLabel.textContent = 'Guest';
 }
 
-// mode toggle
-btnUploadMode.onclick = () => {
-  mode = 'upload';
-  btnUploadMode.classList.add('active');
-  btnRandomMode.classList.remove('active');
-};
+// Helper: inspect image metadata (size, type)
+async function inspectImageMetadata(url) {
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    // HEAD may not be allowed; fallback to GET size
+    let size = res.headers.get('content-length');
+    const type = res.headers.get('content-type');
+    if (!size) {
+      const r = await fetch(url);
+      const b = await r.blob();
+      size = b.size;
+    }
+    showModal('Metadata', 'Type: ' + (type || 'unknown') + '\nSize: ' + (size ? Math.round(size/1024) + ' KB' : 'unknown'));
+  } catch (e) {
+    console.error('inspectImageMetadata error', e);
+    showToast('Failed to inspect metadata', 'error');
+  }
+}
 
-btnRandomMode.onclick = () => {
-  mode = 'random';
-  btnRandomMode.classList.add('active');
-  btnUploadMode.classList.remove('active');
-};
+// UI helpers: modal and toasts
+function showModal(title, body) {
+  const modal = document.getElementById('extract-modal');
+  if (!modal) return;
+  const titleEl = document.getElementById('modal-title');
+  const bodyEl = document.getElementById('modal-body');
+  if (titleEl) titleEl.textContent = title || '';
+  if (bodyEl) bodyEl.innerHTML = (body || '').toString().replace(/\n/g, '<br/>');
+  modal.classList.remove('hidden');
+}
+function closeModal() {
+  const modal = document.getElementById('extract-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+}
+function showToast(msg, type='info') {
+  const container = document.getElementById('toasts');
+  if (!container) return;
+  const t = document.createElement('div');
+  t.className = 'toast px-3 py-2 rounded shadow-lg ' + (type === 'error' ? 'bg-[#93000a] text-white' : 'bg-[#2d3449] text-white');
+  t.innerHTML = msg;
+  container.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 4000);
+}
 
-// render chat list
+// DOM Elements
+const chatListEl = document.getElementById('chat-list');
+const chatMessagesEl = document.getElementById('chat-messages');
+const chatTitleEl = document.getElementById('chat-title');
+const chatAvatarEl = document.getElementById('chat-avatar');
+const statusTextEl = document.getElementById('status-text');
+const statusDotEl = document.getElementById('status-dot');
+const messageInputEl = document.getElementById('message-input');
+const imageUploadEl = document.getElementById('image-upload');
+const hideToggleEl = document.getElementById('hide-toggle');
+const btnNewChat = document.getElementById('btn-new-chat');
+const btnSend = document.getElementById('btn-send');
+const btnAttach = document.getElementById('btn-attach');
+const btnAnalyzeFile = document.getElementById('btn-analyze-file');
+const searchInputEl = document.getElementById('search-input');
+const currentUserLabel = document.getElementById('current-user-label');
+const sharedFilesEl = document.getElementById('shared-files');
+
+// Load chats from server
+async function loadChatsFromServer() {
+  try {
+    const res = await fetch('/api/chats');
+    const data = await res.json();
+    if (data.status === 'ok' && Array.isArray(data.chats)) {
+      chats = data.chats;
+      renderChatList();
+      if (chats.length && !currentChatId) {
+        // Auto-select first chat on load
+        selectChat(chats[0].id);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load chats', e);
+  }
+}
+
+// Render chat list in sidebar
 function renderChatList() {
-  if (!chats.length) {
-    chatListEl.innerHTML = '<div class="chat-placeholder">No chats yet. Create a chat to start messaging.</div>';
+  if (!chatListEl) return;
+  
+  if (!chats || !chats.length) {
+    chatListEl.innerHTML = `
+      <div class="p-4 text-xs text-outline text-center">
+        <p class="mb-2 font-bold">No active channel selected</p>
+        <p class="mb-3">You don't have any active channels. Start a secure conversation to begin sending covert messages.</p>
+        <button id="start-secure-convo" class="px-4 py-2 bg-primary rounded-md text-on-primary-container font-semibold">Start secure conversation</button>
+      </div>
+    `;
     return;
   }
+  
   chatListEl.innerHTML = '';
   chats.forEach(chat => {
     const div = document.createElement('div');
-    div.className = 'chat-item' + (chat.id === currentChatId ? ' active' : '');
-    div.dataset.id = chat.id;
-
+    div.className = 'p-3 hover:bg-surface-container rounded-2xl flex items-center gap-4 cursor-pointer transition-colors group' + (chat.id === currentChatId ? ' bg-primary/10 border border-primary/20' : '');
+    div.dataset.chatId = chat.id;
+    
     const created = chat.createdAt ? new Date(chat.createdAt) : new Date();
     const timeStr = created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const firstLetter = (chat.peerEmail || 'C')[0].toUpperCase();
-
+    const firstLetter = (chat.name || chat.peerEmail || 'C')[0].toUpperCase();
+    const title = chat.name || chat.peerEmail || 'Chat #' + (chat.id || '').slice(0, 6);
+    const preview = chat.lastPreview || 'Awaiting handshake...';
+    const isActive = chat.id === currentChatId;
+    // Highlight search matches if query present
+    let displayTitle = title;
+    let displayPreview = preview;
+    try {
+      const q = (window.lastSearchQuery || '').trim();
+      if (q) {
+        const re = new RegExp(q.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'ig');
+        displayTitle = title.replace(re, (m) => `<mark style="background:rgba(74,225,118,0.15);color:#dfe7ff;padding:0 2px;border-radius:2px">${m}</mark>`);
+        displayPreview = preview.replace(re, (m) => `<mark style="background:rgba(74,225,118,0.12);color:#dfe7ff;padding:0 2px;border-radius:2px">${m}</mark>`);
+      }
+    } catch (e) { /* ignore */ }
+    
     div.innerHTML = `
-      <div class="chat-thumb">
-        <div class="avatar-circle">${firstLetter}</div>
+      <div class="relative">
+        ${chat.peerEmail ? '<img alt="' + title + '" class="w-11 h-11 rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuyA2BgON_yTMkfdkVNYzfF57D5Ka_a7kt_1d5HRhx-2VYnuGUsKWn_k-qSs5w4hR9QfrrUv-jryD2hR7pxz6xM1AtZDvT7Psud7mR9NBylQ_DnCk3Fv8VdegaGZabbuNm4jmJHX_xS9FZt04EMiV6QUp2qhN7UdJji3QfTSlFQRzkuf1mxpnfFS6Cx1GpCkRc4A7romPVLigPa_vohYfT7cPitxipMh7RYJFfU0_Drr2efPxxh13LvNXVqdpH3Z17782Y_SAouA"/>' : '<div class="w-11 h-11 bg-surface-bright rounded-xl flex items-center justify-center text-primary font-bold text-sm">' + firstLetter + '</div>'}
+        ${isActive ? '<div class="absolute -bottom-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-[#0b1326] pulse-ring"></div>' : ''}
       </div>
-      <div class="chat-meta">
-        <div class="chat-title-row">
-          <span class=\"chat-title\">${chat.name || chat.peerEmail || 'Chat #' + (chat.shortId||chat.id)}</span>
-          <span class="chat-time">${timeStr}</span>
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-center mb-0.5">
+          <h3 class="font-bold ${isActive ? 'text-primary' : 'text-on-surface'} group-hover:text-primary truncate text-sm">${displayTitle}</h3>
+          <span class="text-[10px] text-outline font-medium">${timeStr}</span>
         </div>
-        <div class="chat-meta-row">
-          <small>${chat.lastPreview}</small>
-          ${chat.protected ? '<span class="badge-protected">Password Protected</span>' :
-            (chat.unread ? '<span class="unread-dot"></span>' : '')}
-        </div>
+        <p class="text-xs text-on-surface-variant truncate">${displayPreview}</p>
       </div>
     `;
-
-    div.addEventListener('click', () => {
-      currentChatId = chat.id;
-      renderChatList();
-      renderChatView();
-    });
-
+    
+    div.addEventListener('click', () => selectChat(chat.id));
     chatListEl.appendChild(div);
   });
 }
 
-// render chat view
-function renderChatView() {
-  const chat = chats.find(c => c.id === currentChatId);
-  if (!chat) {
-    chatTitleEl.textContent = 'No chat selected';
-    chatViewEl.innerHTML = '<p class="empty">Select a chat or create a new one to start messaging.</p>';
-    return;
-  }
-  chatTitleEl.textContent = chat.peerEmail || `Chat #${chat.shortId}`;
-
-  if (!chat.stegoUrl) {
-    chatViewEl.innerHTML = '<p class="empty">No hidden messages yet. Click "Send Hidden Message".</p>';
-    return;
-  }
-
-  const html = `
-    <div class="bubble sent image-bubble" data-id="${chat.id}">
-      <div class="bubble-header">
-        <span>Hidden image sent</span>
-        <div class="bubble-menu-btn">⋮</div>
-        <div class="bubble-menu-popup hidden">
-          <div class="bubble-menu-item" data-action="open" data-id="${chat.id}">Open</div>
-          <div class="bubble-menu-item" data-action="download" data-id="${chat.id}">Download</div>
-          <div class="bubble-menu-item" data-action="info" data-id="${chat.id}">Info</div>
-          <div class="bubble-menu-item" data-action="delete" data-id="${chat.id}">Delete</div>
-        </div>
-      </div>
-      <img src="${chat.stegoUrl}" alt="Stego image">
-      <div class="meta">Cover mode: ${chat.mode === 'upload' ? 'User image' : 'Random image'}</div>
-    </div>
-  `;
+// Select a chat and load messages
+function selectChat(chatId) {
+  currentChatId = chatId;
+  const chat = chats.find(c => c.id === chatId);
+  if (!chat) return;
   
-  // Skip rendering stego image if it was deleted in this session
-  try {
-    if (typeof window !== 'undefined' && window.deletedStegoUrls && chat && chat.stegoUrl && window.deletedStegoUrls.has(chat.stegoUrl)) {
-      console.debug('render: skipping deleted stegoUrl', chat.stegoUrl);
-      html = ''; // clear html so it doesn't reappear
-    }
-  } catch (e) { console.error(e); }
-chatViewEl.innerHTML = html;
-  chatViewEl.scrollTop = chatViewEl.scrollHeight;
+  // Update header
+  const title = chat.name || chat.peerEmail || 'Secure Channel';
+  chatTitleEl.textContent = title;
+  statusTextEl.textContent = 'Secure Connection Active';
+  statusDotEl.classList.add('pulse-ring');
+  
+  // Set avatar
+  if (chat.peerEmail) {
+    chatAvatarEl.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAO8sbuIuptJybnNG9Wi-6ZwMbEvXZPbvCMf6ijdy2yZZpXVH';
+  } else {
+    chatAvatarEl.src = '';
+  }
+  
+  // Load messages
+  loadMessagesForChat(chat);
+  renderChatList();
 }
 
-// New Chat modal
-if (btnNewChat) btnNewChat.onclick = () => {
-  newChatEmail.value = '';
-  newChatProtect.checked = false;
-  newChatPassword.value = '';
-  newChatPassword.disabled = true;
-  newChatPopup.classList.remove('hidden');
-};
+// Load messages for selected chat
+function loadMessagesForChat(chat) {
+  if (!chatMessagesEl) return;
+  
+  chatMessagesEl.innerHTML = `
+    <div class="flex justify-center">
+      <span class="px-4 py-1 rounded-full bg-surface-container-low text-[10px] uppercase tracking-[0.2em] font-bold text-outline">Today - 128-bit AES</span>
+    </div>
+  `;
 
-if (newChatProtect) newChatProtect.onchange = () => {
-  newChatPassword.disabled = !newChatProtect.checked;
-};
-
-if (newChatCancel) newChatCancel.onclick = () => {
-  newChatPopup.classList.add('hidden');
-};
-
-if (newChatCreate) newChatCreate.onclick = () => {
-  const email = newChatEmail.value.trim();
-  const protect = newChatProtect.checked;
-  const chatPw = newChatPassword.value.trim();
-
-  if (!email) {
-    alert('Please enter user email');
+  // When chat has no messages, show onboarding / empty state
+  if (!chat.messages || !chat.messages.length) {
+    chatMessagesEl.innerHTML += `
+      <div class="flex flex-col items-center justify-center mt-12 text-center text-on-surface-variant">
+        <h3 class="text-xl font-bold mb-2">No active channel selected</h3>
+        <p class="mb-4">Start secure conversation — attach an image or enable Stealth Mode to hide messages in media.</p>
+        <button id="start-secure-convo-cta" class="px-5 py-2 bg-primary rounded-lg text-on-primary-container font-bold">Start secure conversation</button>
+        <div class="mt-6 text-sm text-outline max-w-[520px]">
+          <p class="font-semibold mb-1">Tips</p>
+          <ul class="list-disc list-inside text-left mt-2">
+            <li>Attach an image to hide data</li>
+            <li>Enable Stealth Mode for covert messaging</li>
+            <li>Inspect media to reveal hidden payloads</li>
+          </ul>
+        </div>
+      </div>
+    `;
+    setTimeout(() => {
+      const cta = document.getElementById('start-secure-convo-cta');
+      if (cta) cta.addEventListener('click', () => createNewChat());
+    }, 50);
     return;
   }
-  if (protect && !chatPw) {
-    alert('Please enter chat password');
-    return;
+  
+  // Add sample messages for demo
+  const messages = chat.messages || [
+    { type: 'incoming', text: 'System initialized. Ready for secure transmission.', time: '14:02', decrypted: true },
+    { type: 'outgoing', text: 'Initializing steganography engine...', time: '14:15', secure: true }
+  ];
+  
+  messages.forEach(msg => {
+    const msgDiv = document.createElement('div');
+    if (msg.type === 'incoming') {
+      msgDiv.className = 'flex flex-col gap-2 max-w-[70%]';
+      msgDiv.innerHTML = `
+        <div class="glass-bubble p-4 rounded-xl rounded-tl-none border border-outline-variant/10">
+          <p class="text-on-surface text-sm leading-relaxed">${msg.text}</p>
+        </div>
+        <span class="font-label text-[10px] text-outline px-1">${msg.time}${msg.decrypted ? ' · DECRYPTED' : ''}</span>
+      `;
+    } else {
+      msgDiv.className = 'flex flex-col items-end gap-2 ml-auto max-w-[80%]';
+      msgDiv.innerHTML = `
+        <div class="bg-primary-container px-4 py-3 rounded-xl rounded-tr-none max-w-sm">
+          <p class="text-on-primary-container text-sm font-medium">${msg.text}</p>
+        </div>
+        <span class="font-label text-[10px] text-outline px-1 uppercase tracking-tighter">${msg.time}${msg.secure ? ' · SECURE TRANSMISSION' : ''}</span>
+      `;
+    }
+    chatMessagesEl.appendChild(msgDiv);
+  });
+  
+  // Scroll to bottom
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+// Create new chat
+async function createNewChat() {
+  const email = prompt('Enter recipient email for secure channel:');
+  if (!email) return;
+  
+  try {
+    btnNewChat.disabled = true;
+    btnNewChat.innerHTML = '<div class="loading-spinner w-5 h-5"></div>';
+    
+    const { res, data } = await postJson('/api/chats', {
+      type: 'private',
+      name: '',
+      peerEmail: email,
+      members: [email],
+      owner: currentUserLabel?.textContent || 'user'
+    });
+    
+    if (data.status === 'ok' && data.chat) {
+      chats.push(data.chat);
+      selectChat(data.chat.id);
+      renderChatList();
+    } else {
+      showToast('Failed to create chat: ' + (data.error || 'Unknown error'), 'error');
+    }
+  } catch (e) {
+    console.error('Create chat error:', e);
+    showToast('Network error while creating chat', 'error');
+  } finally {
+    btnNewChat.disabled = false;
+    btnNewChat.innerHTML = '<span class="material-symbols-outlined text-sm">add_moderator</span> Secure Transmission';
   }
+}
 
-  const id = Date.now();
-  const shortId = String(id).slice(-4);
-  const now = new Date();
-
-  const chat = {
-    id,
-    shortId,
-    peerEmail: email,
-    stegoUrl: null,
-    mode: 'upload',
-    lastPreview: 'No messages yet',
-    createdAt: now.toISOString(),
-    unread: false,
-    protected: protect,
-    chatPassword: chatPw || null,
-    selfDestruct: false
-  };
-
-  chats.unshift(chat);
-  currentChatId = id;
-  renderChatList();
-  renderChatView();
-  newChatPopup.classList.add('hidden');
-};
-
-// open hidden message popup
-btnOpenHiddenPopup.onclick = () => {
-  if (!currentChatId) {
-    alert('Please create or select a chat first.');
-    return;
+// Send message (with optional hidden image)
+async function sendMessage() {
+  const text = (messageInputEl ? (messageInputEl.value||'').trim() : (document.getElementById('stego-message')?.value || '').trim());
+  const hideMode = hideToggleEl.checked;
+  
+  if (!text && !hideMode) return;
+  
+  try {
+    btnSend.disabled = true;
+    btnSend.innerHTML = '<div class="loading-spinner w-5 h-5"></div>';
+    
+    if (hideMode) {
+      // Require cover image when stealth mode is ON
+      const coverUploadEl = document.getElementById('cover-upload');
+      const hasCover = (typeof coverImage !== 'undefined' && coverImage) || (imageUploadEl && imageUploadEl._fetchedFile) || (imageUploadEl && imageUploadEl.files && imageUploadEl.files[0]) || (coverUploadEl && coverUploadEl._fetchedBlob);
+      if (!hasCover) {
+        showToast('Please select a cover image for stealth mode', 'error');
+        btnSend.disabled = false;
+        btnSend.innerHTML = '<span class="material-symbols-outlined" data-weight="fill">arrow_upward</span>';
+        return;
+      }
+      // Send hidden message via steganography
+      await sendHiddenMessage(text);
+    } else {
+      // Regular text message
+      addMessageToChat('outgoing', text, new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), true);
+      messageInputEl.value = '';
+    }
+    
+    // Update chat preview
+    const chat = chats.find(c => c.id === currentChatId);
+    if (chat) {
+      if (hideMode) {
+        chat.lastPreview = '🔐 Hidden message';
+      } else {
+        chat.lastPreview = text || 'Hidden message sent';
+      }
+      renderChatList();
+    }
+  } catch (e) {
+    console.error('Send error:', e);
+    showToast('Failed to send message', 'error');
+  } finally {
+    btnSend.disabled = false;
+    btnSend.innerHTML = '<span class="material-symbols-outlined" data-weight="fill">arrow_upward</span>';
   }
-  hmImage.value = '';
-  hmMessage.value = '';
-  hmPassword.value = '';
-  hmDecoyToggle.checked = false;
-  hmDecoySection.classList.add('hidden');
-  hmDecoyPass.value = '';
-  hmDecoyMessage.value = '';
-  hmSelfDestruct.checked = false;
-  hiddenPopup.classList.remove('hidden');
-};
+}
 
-hmDecoyToggle.onchange = () => {
-  hmDecoySection.classList.toggle('hidden', !hmDecoyToggle.checked);
-};
-
-if (hmCancelBtn) hmCancelBtn.onclick = () => hiddenPopup.classList.add('hidden');
-
-// send hidden message (embed)
-if (hmSendBtn) hmSendBtn.onclick = async () => {
-  embedStatus.textContent = '';
-  const chat = chats.find(c => c.id === currentChatId);
-  if (!chat) {
-    alert('No active chat');
-    return;
-  }
-  const msg = hmMessage.value.trim();
-  const pw = hmPassword.value.trim();
-  if (!msg || !pw) {
-    alert('Secret message and image password are required.');
-    return;
-  }
-  if (!hmImage.files[0] && mode === 'upload') {
-    alert('Please choose a cover image or switch to Random Image mode.');
-    return;
-  }
-
+// Send hidden message via steganography
+async function sendHiddenMessage(message) {
+  // Prepare form data: prefer panel's cover upload (fetchedBlob or selected file), then explicit coverImage (composer), then imageUpload fallback, then random server sample
   const fd = new FormData();
-  fd.append('mode', mode);
-  fd.append('message', msg);
-  fd.append('password', pw);
-
-  if (mode === 'upload') {
-    fd.append('image', hmImage.files[0]);
+  const panelCoverEl = document.getElementById('cover-upload');
+  if (panelCoverEl && panelCoverEl._fetchedBlob) {
+    fd.append('image', panelCoverEl._fetchedBlob, 'cover.jpg');
+  } else if (panelCoverEl && panelCoverEl.files && panelCoverEl.files[0]) {
+    fd.append('image', panelCoverEl.files[0]);
+  } else if (typeof coverImage !== 'undefined' && coverImage) {
+    fd.append('image', coverImage);
+    useRandomImage = false;
+  } else if (imageUploadEl && imageUploadEl._fetchedFile) {
+    fd.append('image', imageUploadEl._fetchedFile, imageUploadEl._fetchedFile.name || 'random.jpg');
+  } else if (imageUploadEl.files && imageUploadEl.files[0]) {
+    fd.append('image', imageUploadEl.files[0]);
+  } else if (useRandomImage) {
+    const samples = await fetch('/sample-list').then(r => r.json());
+    if (samples && samples.length) {
+      const randomSample = samples[Math.floor(Math.random() * samples.length)];
+      const response = await fetch('/sample/' + randomSample);
+      const blob = await response.blob();
+      fd.append('image', blob, randomSample);
+    } else {
+      showToast('No sample images available', 'error');
+      btnSend.disabled = false;
+      btnSend.innerHTML = '<span class="material-symbols-outlined" data-weight="fill">arrow_upward</span>';
+      return;
+    }
+  } else {
+    showToast('Please select a cover image for stealth mode', 'error');
+    btnSend.disabled = false;
+    btnSend.innerHTML = '<span class="material-symbols-outlined" data-weight="fill">arrow_upward</span>';
+    return;
   }
 
-  const decoyEnabled = hmDecoyToggle.checked;
-  const decoyPass = hmDecoyPass.value.trim();
-  const decoyMsg = hmDecoyMessage.value.trim();
-  const selfDestruct = hmSelfDestruct.checked;
-
-  // For now, decoy data is not used by backend; kept on client only
-  chat.decoy = decoyEnabled ? { password: decoyPass, message: decoyMsg } : null;
-  chat.selfDestruct = selfDestruct;
-  chat.imagePassword = pw;
+  fd.append('message', message || ' ');
+  fd.append('password', 'stego123'); // Default password
 
   try {
     const res = await fetch('/api/embed', { method: 'POST', body: fd });
     const data = await res.json();
-    if (!res.ok) {
-      alert(data.error || 'Error embedding message.');
-      return;
-    }
-    chat.stegoUrl = data.stego_url;
-    chat.mode = mode;
-    chat.lastPreview = 'Hidden message (locked)';
-    chat.unread = true;
-    renderChatList();
-    renderChatView();
-    embedStatus.textContent = 'Hidden image created for this chat.';
-    hiddenPopup.classList.add('hidden');
-  } catch (err) {
-    console.error(err);
-    alert('Network error while embedding.');
-  }
-};
 
-// bottom extract bar (manual)
-if (btnExtract) btnExtract.onclick = async () => {
-  extractResult.textContent = 'Revealing message...';
-  const password = extractPass.value.trim();
-  if (!password) {
-    extractResult.textContent = 'Password is required.';
-    return;
-  }
-  if (!extractImageInput.files[0]) {
-    extractResult.textContent = 'Please choose a stego image.';
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append('image', extractImageInput.files[0]);
-  fd.append('password', password);
-
-  try {
-    const res = await fetch('/api/extract', { method: 'POST', body: fd });
-    const data = await res.json();
-    if (!res.ok) {
-      extractResult.textContent = data.error || 'Error extracting message.';
-      return;
-    }
-    const msg = data.message || '';
-    extractResult.textContent = 'Revealed: ' + msg;
-  } catch (err) {
-    console.error(err);
-    extractResult.textContent = 'Network error while extracting.';
-  }
-};
-
-// bubble menu
-document.addEventListener('click', async (e) => {
-  if (e.target.classList.contains('bubble-menu-btn')) {
-    const bubble = e.target.closest('.image-bubble');
-    const popup = bubble.querySelector('.bubble-menu-popup');
-    document.querySelectorAll('.bubble-menu-popup').forEach(p => p.classList.add('hidden'));
-    if (popup) popup.classList.toggle('hidden');
-    e.stopPropagation();
-    return;
-  } else if (!e.target.classList.contains('bubble-menu-item')) {
-    document.querySelectorAll('.bubble-menu-popup').forEach(p => p.classList.add('hidden'));
-  }
-
-  if (!e.target.classList.contains('bubble-menu-item')) return;
-
-
-  // determine action and chat id (support id or shortId)
-  const action = e.target.dataset.action;
-  const chatId = e.target.dataset.id || e.target.dataset.shortId || e.target.dataset.msgId;
-  if (!action) {
-    console.debug('bubble-menu: no action dataset on target', e.target);
-    return;
-  }
-  console.debug('bubble-menu click', { action, chatId });
-
-  // try to resolve chat object robustly
-  let chat = null;
-  if (chatId) {
-    // try exact id match or shortId match
-    chat = (Array.isArray(chats) && chats.find(c => String(c.id) === String(chatId))) ||
-           (Array.isArray(chats) && chats.find(c => String(c.shortId) === String(chatId)));
-  }
-
-  // fallback: if viewing a single chat, try currentChat or currentChatId if present
-  if (!chat) {
-    if (typeof currentChat !== 'undefined' && currentChat && (String(currentChat.id) === String(chatId) || String(currentChat.shortId) === String(chatId))) {
-      chat = currentChat;
-    } else if (typeof currentChatId !== 'undefined' && String(currentChatId) === String(chatId)) {
-      chat = (Array.isArray(chats) && chats.find(c => String(c.id) === String(currentChatId)));
-    } else if (!chat) {
-      // last resort: try to build minimal chat object from DOM (grab image src)
-      const bubble = e.target.closest('.image-bubble') || e.target.closest('.bubble') || e.target.closest('[data-id]');
-      if (bubble) {
-        const img = bubble.querySelector('img');
-        if (img && img.src) {
-          chat = { id: chatId || null, stegoUrl: img.src, shortId: chatId || null };
-          console.debug('bubble-menu: constructed chat from DOM', chat);
-        }
-      }
-    }
-  }
-
-  if (!chat) {
-    console.warn('bubble-menu: could not resolve chat for action', { action, chatId });
-    return;
-  }
-if (action === 'open') {
-    openPasswordPopup(chat);
-  }
-  if (action === 'download') {
-    const a = document.createElement('a');
-    a.href = chat.stegoUrl;
-    a.download = `secretsnap-${chat.shortId}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-  if (action === 'info') {
-    openInfoPopup(chat);
-  }
-  
-  
-  if (action === 'delete') {
-    // Confirm deletion
-    if (!confirm('Delete this hidden image from this chat?')) {
-      return;
-    }
-
-    // Try to find the bubble element in the DOM
-    const bubbleEl =
-      e.target.closest('.image-bubble') ||
-      e.target.closest('.bubble') ||
-      e.target.closest('[data-msg-id]') ||
-      e.target.closest('[data-id]');
-
-    // Mark this stego URL as deleted for this session (so it does not re-render)
-    try {
-      if (typeof window !== 'undefined' && window.deletedStegoUrls && chat && chat.stegoUrl) {
-        window.deletedStegoUrls.add(chat.stegoUrl);
-        console.debug('bubble-menu: marked stegoUrl deleted (via chat object)', chat.stegoUrl);
-      }
-    } catch (err) {
-      console.error('Error tracking deleted stegoUrl:', err);
-    }
-
-    // Clear stego image from this chat object so future renders treat it as empty
-    try {
-      if (chat) {
-        chat.stegoUrl = null;
-        chat.lastPreview = 'Hidden image deleted';
-        chat.unread = false;
-      }
-    } catch (err) {
-      console.error('Error clearing chat stegoUrl:', err);
-    }
-
-    // Remove bubble element from DOM if present
-    if (bubbleEl && bubbleEl.remove) {
-      try {
-        bubbleEl.remove();
-      } catch (err) {
-        console.error('Error removing bubble element:', err);
-      }
-    }
-
-    // Refresh UI
-    try {
-      if (typeof renderChatList === 'function') renderChatList();
-      if (typeof renderChatView === 'function') renderChatView();
-    } catch (err) {
-      console.error('Error refreshing view after delete:', err);
-    }
-
-    return;
-  }
-
-});
-
-// open password popup for chat
-function openPasswordPopup(chat) {
-  popupPass.value = '';
-  passwordPopup.classList.remove('hidden');
-
-  if (popupOpenBtn) popupOpenBtn.onclick = async () => {
-    const password = popupPass.value.trim();
-    if (!password) return;
-
-    // decoy logic (UI only)
-    if (chat.decoy && chat.decoy.password && password === chat.decoy.password) {
-      messagePopupText.textContent = chat.decoy.message || '(No decoy message configured)';
-      messagePopup.classList.remove('hidden');
-      passwordPopup.classList.add('hidden');
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append('password', password);
-    const resImg = await fetch(chat.stegoUrl);
-    const blob = await resImg.blob();
-    fd.append('image', blob, 'chat.png');
-
-    const res = await fetch('/api/extract', { method: 'POST', body: fd });
-    const data = await res.json();
-
-    if (res.ok) {
-      const msg = data.message || '';
-      chat.lastPreview = msg.length > 20 ? msg.slice(0, 20) + '…' : msg;
-      chat.unread = false;
-      messagePopupText.textContent = msg;
-      messagePopup.classList.remove('hidden');
-
-      if (chat.selfDestruct) {
-        chat.stegoUrl = null;
-        chat.lastPreview = 'Message self-destructed';
-      }
-      renderChatList();
-      renderChatView();
+    if (data.status === 'ok') {
+      // Add stego image to chat (do NOT display plaintext)
+      addStegoImageToChat(data.stego_url, null, { embedded: true });
+      // update chat preview to avoid plaintext leakage
+      const chat = chats.find(c => c.id === currentChatId);
+      if (chat) { chat.lastPreview = '🔐 Hidden message'; renderChatList(); }
+      // clear composer input if present, otherwise clear panel message
+      if (messageInputEl) messageInputEl.value = '';
+      else document.getElementById('stego-message').value = '';
+      imageUploadEl.value = '';
     } else {
-      alert(data.error || 'Error extracting message.');
+      showToast('Embed failed: ' + (data.error || 'Unknown error'), 'error');
     }
-    passwordPopup.classList.add('hidden');
-  };
-
-  if (popupCancelBtn) popupCancelBtn.onclick = () => passwordPopup.classList.add('hidden');
+  } catch (e) {
+    console.error('Embed error:', e);
+    showToast('Network error while embedding', 'error');
+  }
 }
 
-// info popup
-function openInfoPopup(chat) {
-  const created = chat.createdAt ? new Date(chat.createdAt) : new Date();
-  const createdStr = created.toLocaleString();
-  const modeLabel = chat.mode === 'upload' ? 'User uploaded image' : 'Random system image';
-  const status = chat.stegoUrl ? (chat.unread ? 'Locked' : 'Opened') : 'No active stego image';
-
-  infoContent.innerHTML = `
-    <b>Chat partner:</b> ${chat.peerEmail}<br>
-    <b>Chat ID:</b> #${chat.shortId}<br>
-    <b>Cover Mode:</b> ${modeLabel}<br>
-    <b>Status:</b> ${status}<br>
-    <b>Created:</b> ${createdStr}<br>
-    ${chat.protected ? '<b>Chat protected with password.</b><br>' : ''}
-    ${chat.selfDestruct ? '<b>Self-destruct enabled.</b><br>' : ''}
-    ${chat.stegoUrl ? '<b>Stego URL:</b> <span style="word-break:break-all;">' + location.origin + chat.stegoUrl + '</span>' : ''}
+// Add stego image message to chat
+function addStegoImageToChat(stegoUrl, message, opts = {}) {
+  if (!chatMessagesEl) return;
+  
+  const showText = !!message && !opts.embedded ? true : false;
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'flex flex-col items-end gap-2 ml-auto max-w-[80%] transition-transform animate-message-in';
+  msgDiv.innerHTML = `
+    <div class="relative group">
+      <div class="bg-primary-container p-1 rounded-2xl overflow-hidden shadow-2xl">
+        <img alt="Stego Image" class="w-full h-64 object-cover rounded-xl" src="${stegoUrl}" data-stego-url="${stegoUrl}"/>
+        <div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button class="px-2 py-1 text-xs rounded inspect-btn" data-url="${stegoUrl}">Inspect Metadata</button>
+          <button class="px-2 py-1 text-xs rounded extract-btn" data-url="${stegoUrl}">Extract Hidden Data</button>
+          <a class="px-2 py-1 text-xs rounded download-btn" href="${stegoUrl}" download>Download</a>
+        </div>
+        <div class="absolute top-4 left-4 bg-surface/80 backdrop-blur-md px-2 py-1.5 rounded-lg flex items-center gap-2 border border-secondary/30">
+          <span class="material-symbols-outlined text-secondary text-base" data-weight="fill">visibility_off</span>
+          <span class="text-[10px] font-bold text-secondary uppercase tracking-tighter">Hidden Payload Embedded</span>
+        </div>
+      </div>
+    </div>
+    ${showText ? `<div class="bg-primary-container px-4 py-3 rounded-xl rounded-tr-none max-w-sm"><p class="text-on-primary-container text-sm font-medium">${message}</p></div>` : ''}
+    <div class="flex items-center gap-2 text-[10px] text-outline font-label">
+      <span>${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+      <span class="px-2 py-0.5 bg-surface-container-highest rounded-full">Encrypted (AES-256)</span>
+      <span class="px-2 py-0.5 bg-surface-container-highest rounded-full">LSB</span>
+    </div>
   `;
-  infoPopup.classList.remove('hidden');
+  
+  chatMessagesEl.appendChild(msgDiv);
+  // attach handlers for overlay buttons
+  setTimeout(() => {
+    msgDiv.querySelectorAll('.extract-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // prompt for password
+        const pw = prompt('Enter password (leave empty if none):','');
+        extractImageUrl(btn.dataset.url, pw);
+      });
+    });
+    msgDiv.querySelectorAll('.inspect-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        inspectImageMetadata(btn.dataset.url);
+      });
+    });
+  }, 50);
+
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 }
 
-if (infoCloseBtn) infoCloseBtn.onclick = () => infoPopup.classList.add('hidden');
-
-// message popup close
-messagePopupClose.onclick = () => messagePopup.classList.add('hidden');
-
-// initial
-renderChatList();
-renderChatView();
-
-
-
-// Group chat UI handlers (ensure present)
-document.addEventListener('DOMContentLoaded', function(){
-  const btnGroup = document.getElementById('btn-group-chat');
-  const popup = document.getElementById('group-chat-popup');
-  const cancel = document.getElementById('group-create-cancel');
-  const confirm = document.getElementById('group-create-confirm');
-  if(btnGroup && popup){
-    btnGroup.addEventListener('click', ()=> { popup.classList.remove('hidden'); popup.querySelector('#group-members-input').focus(); });
+// Add regular message to chat
+function addMessageToChat(type, text, time, secure = false) {
+  if (!chatMessagesEl) return;
+  
+  const msgDiv = document.createElement('div');
+  if (type === 'incoming') {
+    msgDiv.className = 'flex flex-col gap-2 max-w-[70%]';
+    msgDiv.innerHTML = `
+      <div class="glass-bubble p-4 rounded-xl rounded-tl-none border border-outline-variant/10">
+        <p class="text-on-surface text-sm leading-relaxed">${text}</p>
+      </div>
+      <span class="font-label text-[10px] text-outline px-1">${time} · DECRYPTED</span>
+    `;
+  } else {
+    msgDiv.className = 'flex flex-col items-end gap-2 ml-auto max-w-[80%]';
+    msgDiv.innerHTML = `
+      <div class="bg-primary-container px-4 py-3 rounded-xl rounded-tr-none max-w-sm">
+        <p class="text-on-primary-container text-sm font-medium">${text}</p>
+      </div>
+      <span class="font-label text-[10px] text-outline px-1 uppercase tracking-tighter">${time}${secure ? ' · SECURE TRANSMISSION' : ''}</span>
+    `;
   }
-  if(cancel){
-    cancel.addEventListener('click', ()=> { popup.classList.add('hidden'); });
+  
+  chatMessagesEl.appendChild(msgDiv);
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+// Extract/analyze hidden message from image
+async function analyzeFile() {
+  if (!imageUploadEl.files || !imageUploadEl.files[0]) {
+    showToast('Please select an image to analyze', 'error');
+    return;
   }
-  if(confirm){
-    confirm.addEventListener('click', async ()=> {
-      const membersRaw = document.getElementById('group-members-input').value.trim();
-      const name = document.getElementById('group-name-input').value.trim();
-      if(!membersRaw){ alert('Please enter at least one member email'); return; }
-      const members = membersRaw.split(',').map(s=>s.trim()).filter(Boolean);
-      const owner = (document.getElementById('current-user-label') && document.getElementById('current-user-label').textContent) || 'admin@gmail.com';
-      try{
-        const res = await fetch('/api/chats', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'group', name: name, members: members, owner: owner}) });
-        const data = await res.json();
-        if(data.status === 'ok'){
-          // ensure name populated
-          if(!data.chat.name || data.chat.name.trim()===''){
-            data.chat.name = data.chat.members && data.chat.members.length ? data.chat.members.join(', ') : (data.chat.owner || 'Group');
-          }
-          // add to local chats and re-render list if renderChatList exists
-          if(typeof chats !== 'undefined' && typeof renderChatList === 'function'){
-            chats.push(data.chat);
-            renderChatList();
-          }
-          popup.classList.add('hidden');
-        } else {
-          alert('Failed to create group: ' + (data.error || JSON.stringify(data)));
-        }
-      }catch(err){ console.error(err); alert('Error creating group'); }
+  
+  const file = imageUploadEl.files[0];
+  const fd = new FormData();
+  fd.append('image', file);
+  fd.append('password', 'stego123');
+  
+  try {
+    btnAnalyzeFile.disabled = true;
+    btnAnalyzeFile.innerHTML = '<div class="loading-spinner w-5 h-5"></div>';
+    
+    const res = await fetch('/api/extract', { method: 'POST', body: fd });
+    const data = await res.json();
+    
+    if (data.status === 'ok') {
+      addMessageToChat('incoming', 'Extracted: ' + data.message, new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), true);
+    } else {
+      showToast('Extract failed: ' + (data.error || 'No hidden message found'), 'error');
+    }
+  } catch (e) {
+    console.error('Extract error:', e);
+    showToast('Network error while extracting', 'error');
+  } finally {
+    btnAnalyzeFile.disabled = false;
+    btnAnalyzeFile.innerHTML = '<span class="material-symbols-outlined">visibility_off</span>';
+  }
+}
+
+// Toggle image mode (upload vs random)
+function toggleImageMode() {
+  useRandomImage = !useRandomImage;
+  if (useRandomImage) {
+    btnAttach.title = 'Using random vault image';
+    btnAttach.style.opacity = '0.7';
+  } else {
+    btnAttach.title = 'Attach your image';
+    btnAttach.style.opacity = '1';
+  }
+}
+
+// Wipe transmission history
+async function wipeHistory() {
+  if (!confirm('Wipe all transmission history for this channel?')) return;
+  
+  try {
+    const chat = chats.find(c => c.id === currentChatId);
+    if (chat) {
+      chat.messages = [];
+      chat.lastPreview = 'History wiped';
+      loadMessagesForChat(chat);
+      renderChatList();
+    }
+  } catch (e) {
+    console.error('Wipe error:', e);
+  }
+}
+
+// Search chats
+function searchChats(query) {
+  window.lastSearchQuery = query || '';
+  if (!query) { renderChatList(); return; }
+  const q = query.toLowerCase();
+  const filtered = chats.filter(c => {
+    if ((c.name || '').toLowerCase().includes(q)) return true;
+    if ((c.peerEmail || '').toLowerCase().includes(q)) return true;
+    if ((c.lastPreview || '').toLowerCase().includes(q)) return true;
+    if (Array.isArray(c.messages) && c.messages.some(m => (m.text || '').toLowerCase().includes(q))) return true;
+    return false;
+  });
+  const original = chats;
+  chats = filtered;
+  renderChatList();
+  chats = original;
+}
+
+// Utility: POST JSON
+async function postJson(url, payload) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  return { res, data };
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  loadChatsFromServer();
+  
+  // Event listeners
+  btnNewChat?.addEventListener('click', createNewChat);
+  btnSend?.addEventListener('click', sendMessage);
+  
+  // Attach popup: show options to use my image or fetch random
+  const attachPopup = document.getElementById('attach-popup');
+  const attachUseMy = document.getElementById('attach-use-my');
+  const attachRandom = document.getElementById('attach-random');
+  let coverImage = null; // File | null
+  
+  function showCoverThumbnail(file) {
+    coverImage = file;
+    const thumbEl = document.getElementById('cover-thumbnail');
+    if (!thumbEl) return;
+    const url = URL.createObjectURL(file);
+    thumbEl.classList.remove('hidden');
+    thumbEl.innerHTML = `
+      <div class="flex items-center gap-3">
+        <img src="${url}" alt="cover" class="w-16 h-16 rounded-md object-cover" />
+        <div class="flex flex-col">
+          <div class="text-sm font-semibold">Cover image ready for embedding</div>
+          <div class="text-xs text-on-surface-variant">${Math.round((file.size||0)/1024)} KB</div>
+          <div class="mt-2 flex gap-2">
+            <button id="change-cover" class="px-2 py-1 bg-surface-container-high rounded-md text-xs">Change</button>
+            <button id="remove-cover" class="px-2 py-1 bg-error rounded-md text-xs">Remove</button>
+          </div>
+        </div>
+      </div>
+    `;
+    // wire actions
+    setTimeout(() => {
+      const btnChange = document.getElementById('change-cover');
+      const btnRemove = document.getElementById('remove-cover');
+      const panelCover = document.getElementById('cover-upload');
+      if (btnChange) btnChange.addEventListener('click', () => (panelCover ? panelCover.click() : imageUploadEl.click()));
+      if (btnRemove) btnRemove.addEventListener('click', () => {
+        coverImage = null;
+        imageUploadEl.value = '';
+        if (imageUploadEl._fetchedFile) imageUploadEl._fetchedFile = null;
+        // also clear panel cover if present
+        if (panelCover) { panelCover.value = ''; panelCover._fetchedBlob = null; }
+        thumbEl.classList.add('hidden');
+        thumbEl.innerHTML = '';
+      });
+    }, 50);
+  }
+  
+  // attach button opens small popup
+  btnAttach?.addEventListener('click', (e) => {
+    if (!attachPopup) return;
+    attachPopup.classList.toggle('hidden');
+    // prevent the main panel from toggling when using the popup
+    e.stopPropagation();
+  });
+  
+  // hide popup when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!attachPopup) return;
+    if (!attachPopup.classList.contains('hidden')) {
+      const path = e.composedPath ? e.composedPath() : (e.path || []);
+      if (!path.includes(attachPopup) && e.target !== btnAttach) {
+        attachPopup.classList.add('hidden');
+      }
+    }
+  });
+  
+  // "Use My Image" triggers file picker and opens Stealth Embed Panel
+  attachUseMy?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    attachPopup.classList.add('hidden');
+    const panel = document.getElementById('stealth-panel');
+    const coverUploadEl = document.getElementById('cover-upload');
+    if (panel) panel.classList.remove('hidden');
+    // open the cover file picker in the panel
+    if (coverUploadEl) {
+      coverUploadEl.click();
+    } else {
+      // fallback to composer image upload
+      imageUploadEl.click();
+    }
+  });
+
+  // "Random Image" fetches from picsum, sets as cover and opens panel
+  attachRandom?.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    attachPopup.classList.add('hidden');
+    try {
+      const res = await fetch('https://picsum.photos/512');
+      const blob = await res.blob();
+      const file = new File([blob], 'random.jpg', { type: blob.type || 'image/jpeg' });
+      // prefer panel's cover input
+      const coverUploadEl = document.getElementById('cover-upload');
+      const coverPreviewEl = document.getElementById('cover-preview');
+      const panel = document.getElementById('stealth-panel');
+      if (coverUploadEl) {
+        // store the fetched blob for panel submission
+        coverUploadEl._fetchedBlob = blob;
+      }
+      // show preview inside the panel
+      if (coverPreviewEl) {
+        coverPreviewEl.innerHTML = '';
+        const img = document.createElement('img'); img.src = URL.createObjectURL(blob); img.className='w-32 h-20 object-cover rounded-md'; coverPreviewEl.appendChild(img);
+      }
+      // also show composer thumbnail
+      showCoverThumbnail(file);
+      // open embed panel
+      if (panel) panel.classList.remove('hidden');
+    } catch (err) {
+      console.error('Failed to fetch random image', err);
+      showToast('Random image fetch failed', 'error');
+    }
+  });
+  
+  // when user picks a file from device
+  imageUploadEl?.addEventListener('change', (ev) => {
+    const f = imageUploadEl.files && imageUploadEl.files[0];
+    if (f) {
+      imageUploadEl._fetchedFile = null;
+      showCoverThumbnail(f);
+    }
+  });
+  
+  btnAnalyzeFile?.addEventListener('click', analyzeFile);
+  hideToggleEl?.addEventListener('change', () => {});
+  searchInputEl?.addEventListener('input', (e) => searchChats(e.target.value));
+
+  // Stealth panel controls
+  const coverUploadEl = document.getElementById('cover-upload');
+  const btnCoverSelect = document.getElementById('btn-cover-select');
+  const btnRandomFetch = document.getElementById('btn-random-fetch');
+  const coverPreviewEl = document.getElementById('cover-preview');
+  const payloadUploadEl = document.getElementById('payload-upload');
+  const payloadPreviewEl = document.getElementById('payload-preview');
+  const decoyToggleEl = document.getElementById('decoy-toggle');
+  const decoyAreaEl = document.getElementById('decoy-area');
+  const btnCancelStego = document.getElementById('btn-cancel-stego');
+  const btnSendStego = document.getElementById('btn-send-stego');
+  const tabMyImage = document.getElementById('tab-my-image');
+  const tabRandomImage = document.getElementById('tab-random-image');
+
+  if (btnCoverSelect && coverUploadEl) {
+    btnCoverSelect.addEventListener('click', (e) => { e.preventDefault(); coverUploadEl.click(); });
+  }
+  if (coverUploadEl) {
+    coverUploadEl.addEventListener('change', (e) => {
+      const f = coverUploadEl.files && coverUploadEl.files[0];
+      if (!f) return;
+      // ensure the fetchedBlob is cleared if user picked their own file
+      coverUploadEl._fetchedBlob = null;
+      coverPreviewEl.innerHTML = '';
+      if (f.type && f.type.startsWith('image/')) {
+        const img = document.createElement('img'); img.src = URL.createObjectURL(f); img.className='w-32 h-20 object-cover rounded-md'; coverPreviewEl.appendChild(img);
+      } else {
+        coverPreviewEl.textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+      }
+      // also show composer thumbnail for quick feedback
+      showCoverThumbnail(f);
     });
   }
+  if (payloadUploadEl) {
+    payloadUploadEl.addEventListener('change', (e) => {
+      const f = payloadUploadEl.files && payloadUploadEl.files[0];
+      if (!f) { payloadPreviewEl.textContent = ''; return; }
+      payloadPreviewEl.textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+    });
+  }
+  if (decoyToggleEl && decoyAreaEl) {
+    decoyToggleEl.addEventListener('change', () => { decoyAreaEl.classList.toggle('hidden', !decoyToggleEl.checked); });
+  }
+  if (btnCancelStego) btnCancelStego.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('stealth-panel').classList.add('hidden'); });
+
+  if (btnRandomFetch) {
+    btnRandomFetch.addEventListener('click', async (e) => {
+      e.preventDefault();
+      btnRandomFetch.disabled = true; btnRandomFetch.textContent = 'Fetching...';
+      try {
+        const r = await fetch('https://picsum.photos/512');
+        const blob = await r.blob();
+        // show preview
+        coverPreviewEl.innerHTML = '';
+        const img = document.createElement('img'); img.src = URL.createObjectURL(blob); img.className='w-32 h-20 object-cover rounded-md'; coverPreviewEl.appendChild(img);
+        // store blob temporarily on element
+        coverUploadEl._fetchedBlob = blob;
+      } catch (err) { showToast('Failed to fetch random image', 'error'); }
+      btnRandomFetch.disabled = false; btnRandomFetch.textContent = 'Fetch Random';
+    });
+  }
+
+  if (btnSendStego) {
+    btnSendStego.addEventListener('click', async (e) => {
+      e.preventDefault();
+      // perform validation
+      const panel = document.getElementById('stealth-panel');
+      const coverFile = coverUploadEl && (coverUploadEl.files && coverUploadEl.files[0]);
+      const fetched = coverUploadEl && coverUploadEl._fetchedBlob;
+      const payloadFile = payloadUploadEl && (payloadUploadEl.files && payloadUploadEl.files[0]);
+      const msg = (document.getElementById('stego-message')?.value || '').trim();
+      const password = document.getElementById('stego-password')?.value || '';
+      const decoyOn = decoyToggleEl && decoyToggleEl.checked;
+      const decoyPassword = document.getElementById('decoy-password')?.value || '';
+      const decoyMessage = document.getElementById('decoy-message')?.value || '';
+      const selfDestruct = document.getElementById('self-destruct')?.checked;
+
+      if (!coverFile && !fetched) { showToast('Stealth mode requires a cover file', 'error'); return; }
+      if (!msg && !payloadFile) { showToast('Stealth mode requires a cover file and message or payload', 'error'); return; }
+
+      // show loading
+      const statusEl = document.getElementById('stego-status'); statusEl.textContent = 'Embedding data...'; btnSendStego.disabled = true;
+
+      const fd = new FormData();
+      if (fetched) fd.append('image', fetched, 'random.jpg');
+      else if (coverFile) fd.append('image', coverFile);
+      if (payloadFile) fd.append('payload', payloadFile);
+      fd.append('message', msg || ' ');
+      if (password) fd.append('password', password);
+      if (decoyOn) { if (decoyPassword) fd.append('decoy_password', decoyPassword); if (decoyMessage) fd.append('decoy_message', decoyMessage); }
+      if (selfDestruct) fd.append('self_destruct','1');
+
+      try {
+        const res = await fetch('/api/embed', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          // add stego message (image only)
+          addStegoImageToChat(data.stego_url, null, { embedded: true });
+          // update chat preview to avoid plaintext leakage
+          const chat = chats.find(c => c.id === currentChatId);
+          if (chat) { chat.lastPreview = '🔐 Hidden message'; renderChatList(); }
+          // clear inputs
+          document.getElementById('stego-message').value = '';
+          if (coverUploadEl) coverUploadEl.value = '';
+          if (payloadUploadEl) payloadUploadEl.value = '';
+          coverUploadEl._fetchedBlob = null;
+          document.getElementById('stealth-panel').classList.add('hidden');
+          statusEl.textContent = 'Embedded and sent ✓';
+          setTimeout(()=> statusEl.textContent = '', 2000);
+        } else {
+          showToast('Embed failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+      } catch (err) {
+        console.error('embed panel error', err); showToast('Network error while embedding', 'error');
+      } finally {
+        btnSendStego.disabled = false; statusEl.textContent = '';
+      }
+    });
+  }
+
+  if (tabMyImage && tabRandomImage) {
+    tabMyImage.addEventListener('click', () => { tabMyImage.classList.add('bg-primary/10'); tabRandomImage.classList.remove('bg-primary/10'); });
+    tabRandomImage.addEventListener('click', () => { tabRandomImage.classList.add('bg-primary/10'); tabMyImage.classList.remove('bg-primary/10'); });
+  }
+  
+  // Enter to send: hook stego-message when composer input is not present
+  const stegoMsgEl = document.getElementById('stego-message');
+  if (messageInputEl) {
+    messageInputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+  } else if (stegoMsgEl) {
+    stegoMsgEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-send-stego')?.click(); }
+    });
+  }
+  
+  // Navigation
+  document.getElementById('nav-chat')?.addEventListener('click', (e) => { e.preventDefault(); });
+  document.getElementById('nav-embed')?.addEventListener('click', () => { window.location.href = '/embed'; });
+  document.getElementById('nav-extract')?.addEventListener('click', () => { window.location.href = '/extract'; });
+  document.getElementById('nav-settings')?.addEventListener('click', () => { window.location.href = '/settings'; });
+  
+  // Mobile nav
+  document.getElementById('mobile-nav-chat')?.addEventListener('click', (e) => { e.preventDefault(); });
+  document.getElementById('mobile-nav-embed')?.addEventListener('click', () => { window.location.href = '/embed'; });
+  document.getElementById('mobile-nav-extract')?.addEventListener('click', () => { window.location.href = '/extract'; });
+  document.getElementById('mobile-nav-settings')?.addEventListener('click', () => { window.location.href = '/settings'; });
+  
+  // Wipe history
+  document.getElementById('btn-wipe-history')?.addEventListener('click', wipeHistory);
+  
+  // Load shared files demo
+  if (sharedFilesEl) {
+    sharedFilesEl.innerHTML = `
+      <div class="aspect-square bg-surface-container rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-outline-variant/10">
+        <img alt="Shared 1" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH66N1wt_NKLX5-CvCy8_9zHv3X1Iu8kIn5AlhNE90GhT5yO4VZVrnp0lMgtXZwDj2l6Y_GKGq6wtZAYRw6PUp8cdfE9CrUEM6qmAa2JxczISRtsci07yWmQ1PFX69BI0_V1CiFIUuRXw4CHlMVSuqTg6kANnGAyaN5RFIxKdykveML7bV797cqu0Z3msuHSEIFUbjqSvMdapZhFF96N3i4INqdMiiZ1CszyuZDsRf4PcmmOAw_Q28IH1EVoIrysfd1HxDgYL4_g"/>
+      </div>
+      <div class="aspect-square bg-surface-container rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-outline-variant/10">
+        <img alt="Shared 2" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOjvjcCAc22S1kUxJc5M5nIH7lX89S5zdQId4Y51VZBLx4VX3YaKR7uXOaEM6Zm8sMIAb4DgOCrSqpaKI_6lWnAX2Dos8Jq_V4dTkSOmg_pWbCRkBWxBw6pbMJ3HYFq5qh6FpNtmg0gzBR7nrocses9jHLHGdYuFeukKkVfQ-gEg2A7vadASdOe1h94wGX6G3UjKUgtFt4hBJOhTPSQMOl3qMx6ORIGJiDIuPHF4P50xk1ysolc0FCPNVx_2gugNc7MBH"/>
+      </div>
+      <div class="aspect-square bg-surface-container rounded-lg flex items-center justify-center text-outline text-[10px] font-bold border border-outline-variant/10">+12</div>
+    `;
+  }
+
+  // wire modal close button
+  document.getElementById('modal-close')?.addEventListener('click', () => closeModal());
+  document.getElementById('extract-modal')?.addEventListener('click', (e) => { if (e.target && e.target.id === 'extract-modal') closeModal(); });
 });
 
+// Global CTA click handler (handles dynamically-inserted CTAs)
+document.addEventListener('click', (e) => {
+  try {
+    const el = e.target;
+    if (!el) return;
+    if (el.id === 'start-secure-convo' || el.id === 'start-secure-convo-cta' || (el.closest && (el.closest('#start-secure-convo') || el.closest('#start-secure-convo-cta')))) {
+      createNewChat();
+    }
+  } catch (err) {
+    console.error('CTA click handler error', err);
+  }
+});
 
+// Drag & drop support for composer (file attach)
+(() => {
+  const composerArea = document.querySelector('footer') || document.querySelector('main');
+  if (!composerArea) return;
+  composerArea.addEventListener('dragover', (e) => { e.preventDefault(); composerArea.classList?.add('drag-over'); });
+  composerArea.addEventListener('dragleave', (e) => { composerArea.classList?.remove('drag-over'); });
+  composerArea.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    composerArea.classList?.remove('drag-over');
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    if (file.size > 500 * 1024 * 1024) { showToast('File too large (max 500MB)', 'error'); return; }
+    // set file into the hidden input
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      imageUploadEl.files = dt.files;
+      showFilePreview(file);
+    } catch (err) {
+      console.warn('Could not set file input programmatically', err);
+      // fallback: store preview only
+      showFilePreview(file);
+    }
+  });
 
-// Message options handlers (added to support Open/Download/Info/Delete)
-function downloadImage(filename, url){ 
-  // create link and click
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename || 'stego-image.png';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-function deleteMessageById(msgId){
-  // frontend-only: remove message from UI and optionally call backend (not implemented)
-  const el = document.querySelector('[data-msg-id="' + msgId + '"]');
-  if(el) el.remove();
-  // TODO: call backend to delete stored file/message if needed
-}
-
-function openMessageInNewTab(url){
-  window.open(url, '_blank');
-}
-
-function showMessageInfo(msg){
-  alert('Message info:\n' + JSON.stringify(msg, null, 2));
-}
+  // Helper to show file preview in composer
+  window.showFilePreview = function(file) {
+    let preview = document.getElementById('file-preview');
+    if (!preview) {
+      const composerRow = document.querySelector('.max-w-4xl') || document.querySelector('.composer') || document.querySelector('footer');
+      preview = document.createElement('div');
+      preview.id = 'file-preview';
+      preview.className = 'mr-3 flex items-center gap-2';
+      composerRow?.insertBefore(preview, composerRow.firstChild);
+    }
+    preview.innerHTML = '';
+    if (file.type && file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.className = 'w-20 h-20 object-cover rounded-md border border-outline-variant/10';
+      preview.appendChild(img);
+    } else {
+      const f = document.createElement('div');
+      f.className = 'w-20 h-20 flex items-center justify-center bg-surface-container-high rounded-md text-xs p-2 border border-outline-variant/10';
+      f.textContent = file.name;
+      preview.appendChild(f);
+    }
+  };
+})();
