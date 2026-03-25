@@ -617,10 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
   }
 
-  // Attach popup: show options to use my image or fetch random
-  const attachPopup = document.getElementById('attach-popup');
-  const attachUseMy = document.getElementById('attach-use-my');
-  const attachRandom = document.getElementById('attach-random');
+  // Attach button now opens the Stealth Embed Panel directly (removed floating dropdown)
   let coverImage = null; // File | null
   
   function showCoverThumbnail(file) {
@@ -660,70 +657,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 50);
   }
   
-  // attach button opens small popup
+  // Attach button opens the Stealth Embed Panel directly (no floating dropdown)
   btnAttach?.addEventListener('click', (e) => {
-    if (!attachPopup) return;
-    attachPopup.classList.toggle('hidden');
-    // prevent the main panel from toggling when using the popup
-    e.stopPropagation();
-  });
-  
-  // hide popup when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!attachPopup) return;
-    if (!attachPopup.classList.contains('hidden')) {
-      const path = e.composedPath ? e.composedPath() : (e.path || []);
-      if (!path.includes(attachPopup) && e.target !== btnAttach) {
-        attachPopup.classList.add('hidden');
-      }
-    }
-  });
-  
-  // "Use My Image" triggers file picker and opens Stealth Embed Panel
-  attachUseMy?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    attachPopup.classList.add('hidden');
+    e.preventDefault();
     const panel = document.getElementById('stealth-panel');
-    const coverUploadEl = document.getElementById('cover-upload');
     if (panel) panel.classList.remove('hidden');
-    // open the cover file picker in the panel
-    if (coverUploadEl) {
-      coverUploadEl.click();
-    } else {
-      // fallback to composer image upload
-      imageUploadEl.click();
-    }
-  });
-
-  // "Random Image" fetches from picsum, sets as cover and opens panel
-  attachRandom?.addEventListener('click', async (e) => {
+    // keep focus on the panel; user can choose Select File or Fetch Random there
     e.stopPropagation();
-    attachPopup.classList.add('hidden');
-    try {
-      const res = await fetch('https://picsum.photos/512');
-      const blob = await res.blob();
-      const file = new File([blob], 'random.jpg', { type: blob.type || 'image/jpeg' });
-      // prefer panel's cover input
-      const coverUploadEl = document.getElementById('cover-upload');
-      const coverPreviewEl = document.getElementById('cover-preview');
-      const panel = document.getElementById('stealth-panel');
-      if (coverUploadEl) {
-        // store the fetched blob for panel submission
-        coverUploadEl._fetchedBlob = blob;
-      }
-      // show preview inside the panel
-      if (coverPreviewEl) {
-        coverPreviewEl.innerHTML = '';
-        const img = document.createElement('img'); img.src = URL.createObjectURL(blob); img.className='w-32 h-20 object-cover rounded-md'; coverPreviewEl.appendChild(img);
-      }
-      // also show composer thumbnail
-      showCoverThumbnail(file);
-      // open embed panel
-      if (panel) panel.classList.remove('hidden');
-    } catch (err) {
-      console.error('Failed to fetch random image', err);
-      showToast('Random image fetch failed', 'error');
-    }
   });
   
   // when user picks a file from device
