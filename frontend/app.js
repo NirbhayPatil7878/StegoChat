@@ -461,6 +461,10 @@ function addStegoImageToChat(stegoUrl, message, opts = {}) {
         inspectImageMetadata(btn.dataset.url);
       });
     });
+    msgDiv.querySelectorAll('.download-btn').forEach(a => {
+      // allow default anchor behavior but stop propagation to parent message click
+      a.addEventListener('click', (e) => { e.stopPropagation(); });
+    });
   }, 50);
 
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
@@ -592,6 +596,25 @@ document.addEventListener('DOMContentLoaded', () => {
   btnNewChat?.addEventListener('click', createNewChat);
   btnSend?.addEventListener('click', sendMessage);
   
+  // Modal wiring: copy + close + outside-click
+  const extractModal = document.getElementById('extract-modal');
+  const modalClose = document.getElementById('modal-close');
+  const modalCopy = document.getElementById('modal-copy');
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+  if (modalCopy) modalCopy.addEventListener('click', () => {
+    const bodyEl = document.getElementById('modal-body');
+    if (!bodyEl) return;
+    const text = bodyEl.textContent || '';
+    if (!navigator.clipboard) {
+      showToast('Clipboard not available', 'error');
+      return;
+    }
+    navigator.clipboard.writeText(text).then(()=> showToast('Copied to clipboard')).catch(()=> showToast('Copy failed','error'));
+  });
+  if (extractModal) {
+    extractModal.addEventListener('click', (e) => { if (e.target === extractModal) closeModal(); });
+  }
+
   // Attach popup: show options to use my image or fetch random
   const attachPopup = document.getElementById('attach-popup');
   const attachUseMy = document.getElementById('attach-use-my');
