@@ -411,7 +411,7 @@ function addStegoImageToChat(stegoUrl, message, opts = {}) {
   const msgDiv = document.createElement('div');
   msgDiv.className = 'flex flex-col items-end gap-2 ml-auto max-w-[80%] transition-transform animate-message-in';
   msgDiv.innerHTML = `
-    <div class="relative group">
+    <div class="relative group image-container">
       <div class="bg-primary-container p-1 rounded-2xl overflow-hidden shadow-2xl">
         <img alt="Stego Image" class="w-full h-64 object-cover rounded-xl" src="${stegoUrl}" data-stego-url="${stegoUrl}"/>
         <div class="absolute top-4 left-4 badge-overlay badge" aria-hidden="true">
