@@ -167,19 +167,19 @@
       "used": false
     }
   },
-  "vault_password": "$2b$12$W32QpIbBeeHOas.5leQs4.A/UK99X.D50XZTIhKQMS6PrpVc8X8Mi",
-  "password_changed_at": 1774534363476,
+  "vault_password": "$2b$12$B.KQk8sYIc5Smg3apGwit.Isbc.JjSr1Q.r4qsvtSlQux6DqVwrU6",
+  "password_changed_at": 1774535307574,
   "profile": {
-    "username": "TestUser123",
-    "email": "testuser@example.com",
-    "updated_at": 1774534362420
+    "username": "Admin",
+    "email": "admin@stegochat.local",
+    "updated_at": 1774536235657
   },
   "settings": {
-    "encryption_protocol": "ChaCha20",
+    "encryption_protocol": "RSA-4096",
     "embedding_method": "Spread Spectrum",
     "auto_delete_messages": true,
-    "passphrase_lock": true,
-    "biometric_auth": false,
-    "updated_at": 1774534364144
+    "passphrase_lock": false,
+    "biometric_auth": true,
+    "updated_at": 1774536248713
   }
 }

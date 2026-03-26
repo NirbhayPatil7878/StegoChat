@@ -605,10 +605,20 @@
     async function saveSettings() {
       try {
         // Collect form values
-        const selects = document.querySelectorAll('select');
+        const encProtocolSelect = document.getElementById('encryption-protocol');
+        const embeddingSelect = document.getElementById('embedding-method');
+        
+        // Extract clean values from selected options
+        let protocol = encProtocolSelect?.value || 'AES-256';
+        let method = embeddingSelect?.value || 'LSB';
+        
+        // Clean up the values (remove the descriptions in parentheses)
+        protocol = protocol.split(' (')[0].trim();
+        method = method === 'Least Significant Bit (LSB)' ? 'LSB' : method;
+
         const settings = {
-          encryption_protocol: selects[0]?.value || 'AES-256',
-          embedding_method: selects[1]?.value || 'LSB'
+          encryption_protocol: protocol,
+          embedding_method: method
         };
 
         // Add toggle settings
