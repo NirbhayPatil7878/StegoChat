@@ -5,6 +5,20 @@ let chats = [];
 let currentChatId = null;
 let useRandomImage = false;
 let deadDropMode = false;
+let selectedChatImageUrl = null;  // Track selected image from chat for extraction
+
+// Global cover image reference — must be accessible from sendMessage() and DOMContentLoaded
+window.coverImageGlobal = null;
+function setCoverImageGlobal(file) {
+  window.coverImageGlobal = file;
+  console.log('[StegoChat] coverImageGlobal set to:', file);
+}
+
+// Track selected image from chat
+function selectChatImage(imageUrl) {
+  selectedChatImageUrl = imageUrl;
+  console.log('[StegoChat] Selected image for extraction:', imageUrl);
+}
 
 // Helper: extract hidden data from an image URL by fetching and POSTing to backend
 async function extractImageUrl(url, password = '') {
@@ -277,8 +291,8 @@ async function createNewChat() {
   if (!email) return;
   
   try {
-    btnNewChat.disabled = true;
-    btnNewChat.innerHTML = '<div class="loading-spinner w-5 h-5"></div>';
+    const btn = document.getElementById('btn-new-chat');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="loading-spinner w-4 h-4"></div>'; }
     
     const { res, data } = await postJson('/api/chats', {
       type: 'private',
@@ -289,59 +303,100 @@ async function createNewChat() {
     });
     
     if (data.status === 'ok' && data.chat) {
-      chats.push(data.chat);
+      if (!chats.some(c => c.id === data.chat.id)) chats.push(data.chat);
       selectChat(data.chat.id);
       renderChatList();
-    } else {
-      showToast('Failed to create chat: ' + (data.error || 'Unknown error'), 'error');
     }
   } catch (e) {
-    console.error('Create chat error:', e);
-    showToast('Network error while creating chat', 'error');
+    showToast('Failed to create chat', 'error');
   } finally {
-    btnNewChat.disabled = false;
-    btnNewChat.innerHTML = '<span class="material-symbols-outlined text-sm">add_moderator</span> Secure Transmission';
+    const btn = document.getElementById('btn-new-chat');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined text-lg">person_add</span> Secure Direct Channel'; }
+  }
+}
+
+// Create new group chat
+async function createNewGroupChat() {
+  const name = prompt('Enter group name:');
+  if (!name) return;
+  const emails = prompt('Enter member emails (comma separated):');
+  if (!emails) return;
+  
+  try {
+    const btn = document.getElementById('btn-new-group');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="loading-spinner w-4 h-4"></div>'; }
+    
+    const { res, data } = await postJson('/api/chats', {
+      type: 'group',
+      name: name,
+      members: emails.split(',').map(s => s.trim()),
+      owner: currentUserLabel?.textContent || 'user'
+    });
+    
+    if (data.status === 'ok' && data.chat) {
+      if (!chats.some(c => c.id === data.chat.id)) chats.push(data.chat);
+      selectChat(data.chat.id);
+      renderChatList();
+    }
+  } catch (e) {
+    showToast('Failed to create group', 'error');
+  } finally {
+    const btn = document.getElementById('btn-new-group');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined text-lg">group_add</span> Create Group Transmission'; }
   }
 }
 
 // Send message (with optional hidden image)
 async function sendMessage() {
-  const text = (messageInputEl ? (messageInputEl.value||'').trim() : (document.getElementById('stego-message')?.value || '').trim());
-  const hideMode = hideToggleEl.checked;
+  // Determine whether we should use stealth mode (steganography)
+  const stegoPasswordEl = document.getElementById('stego-password');
+  const payloadUploadEl = document.getElementById('payload-upload');
+  const stealthPanelEl = document.getElementById('stealth-panel');
+  const hasStegoPassword = stegoPasswordEl && stegoPasswordEl.value.trim().length > 0;
+  const hasPayload = payloadUploadEl && ((payloadUploadEl.files && payloadUploadEl.files[0]) || payloadUploadEl._fetchedBlob);
+  const isPanelOpen = stealthPanelEl && !stealthPanelEl.classList.contains('hidden');
+  const isStealth = (hideToggleEl && hideToggleEl.checked) || (window.coverImageGlobal) || (imageUploadEl && imageUploadEl.files && imageUploadEl.files[0]) || hasStegoPassword || hasPayload || isPanelOpen;
   
-  if (!text && !hideMode) return;
-  
+  const text = (messageInputEl ? (messageInputEl.value||'').trim() : '');
+  console.log('[StegoChat] sendMessage() called — text:', JSON.stringify(text), 'isStealth:', isStealth, 'hasStegoPassword:', hasStegoPassword, 'hasPayload:', hasPayload, 'isPanelOpen:', isPanelOpen);
+
+  if (!text && !isStealth) return;
+
   try {
     btnSend.disabled = true;
     btnSend.innerHTML = '<div class="loading-spinner w-5 h-5"></div>';
-    
-    if (hideMode) {
-      // Require cover image when stealth mode is ON
+
+    if (isStealth) {
+      // If stealth is on but no specific cover was uploaded, enable random server image
       const coverUploadEl = document.getElementById('cover-upload');
-      const hasCover = (typeof coverImage !== 'undefined' && coverImage) || (imageUploadEl && imageUploadEl._fetchedFile) || (imageUploadEl && imageUploadEl.files && imageUploadEl.files[0]) || (coverUploadEl && coverUploadEl._fetchedBlob);
-      if (!hasCover) {
-        showToast('Please select a cover image for stealth mode', 'error');
-        btnSend.disabled = false;
-        btnSend.innerHTML = '<span class="material-symbols-outlined" data-weight="fill">arrow_upward</span>';
-        return;
+      const specificCover = (window.coverImageGlobal) || (imageUploadEl && imageUploadEl.files && imageUploadEl.files[0]) || (coverUploadEl && (coverUploadEl.files && coverUploadEl.files[0])) || (coverUploadEl && coverUploadEl._fetchedBlob);
+      
+      if (!specificCover) {
+        useRandomImage = true;
       }
+
       // Send hidden message via steganography
       await sendHiddenMessage(text);
+      // update chat preview
+      const chat = chats.find(c => c.id === currentChatId);
+      if (chat) { chat.lastPreview = '🔐 Hidden message'; renderChatList(); }
+      // clear composer and cover preview
+      if (messageInputEl) messageInputEl.value = '';
+      // clear cover thumbnail and panel inputs
+      const coverThumb = document.getElementById('cover-thumbnail'); if (coverThumb) { coverThumb.classList.add('hidden'); coverThumb.innerHTML = ''; }
+      if (coverUploadEl) { coverUploadEl.value = ''; coverUploadEl._fetchedBlob = null; }
+      if (imageUploadEl) { imageUploadEl.value = ''; imageUploadEl._fetchedFile = null; }
+      // clear global cover
+      setCoverImageGlobal(null);
+      // restore placeholder
+      if (messageInputEl) messageInputEl.placeholder = 'Type a message...';
     } else {
       // Regular text message
       addMessageToChat('outgoing', text, new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), true);
-      messageInputEl.value = '';
-    }
-    
-    // Update chat preview
-    const chat = chats.find(c => c.id === currentChatId);
-    if (chat) {
-      if (hideMode) {
-        chat.lastPreview = '🔐 Hidden message';
-      } else {
-        chat.lastPreview = text || 'Hidden message sent';
-      }
-      renderChatList();
+      if (messageInputEl) messageInputEl.value = '';
+      // update preview
+      const chat = chats.find(c => c.id === currentChatId);
+      if (chat) { chat.lastPreview = text || ''; renderChatList(); }
     }
   } catch (e) {
     console.error('Send error:', e);
@@ -361,14 +416,22 @@ async function sendHiddenMessage(message) {
     fd.append('image', panelCoverEl._fetchedBlob, 'cover.jpg');
   } else if (panelCoverEl && panelCoverEl.files && panelCoverEl.files[0]) {
     fd.append('image', panelCoverEl.files[0]);
-  } else if (typeof coverImage !== 'undefined' && coverImage) {
-    fd.append('image', coverImage);
-    useRandomImage = false;
+  } else if (window.coverImageGlobal) {
+    // ensure Blob/File has a filename when appending
+    try {
+      const blob = window.coverImageGlobal;
+      const filename = (blob && blob.name) ? blob.name : 'cover.jpg';
+      fd.append('image', blob, filename);
+      useRandomImage = false;
+    } catch (err) {
+      console.warn('Failed to append global coverImage as file', err);
+    }
   } else if (imageUploadEl && imageUploadEl._fetchedFile) {
     fd.append('image', imageUploadEl._fetchedFile, imageUploadEl._fetchedFile.name || 'random.jpg');
   } else if (imageUploadEl.files && imageUploadEl.files[0]) {
     fd.append('image', imageUploadEl.files[0]);
   } else if (useRandomImage) {
+    fd.append('mode', 'sample');
     const samples = await fetch('/sample-list').then(r => r.json());
     if (samples && samples.length) {
       const randomSample = samples[Math.floor(Math.random() * samples.length)];
@@ -382,6 +445,8 @@ async function sendHiddenMessage(message) {
       return;
     }
   } else {
+    // Default to upload even if not explicit
+    fd.append('mode', 'upload');
     showToast('Please select a cover image for stealth mode', 'error');
     btnSend.disabled = false;
     btnSend.innerHTML = '<span class="material-symbols-outlined" data-weight="fill">arrow_upward</span>';
@@ -389,7 +454,28 @@ async function sendHiddenMessage(message) {
   }
 
   fd.append('message', message || ' ');
-  fd.append('password', 'stego123'); // Default password
+
+  // Read password from the stealth panel input (fall back to default)
+  const stegoPasswordEl = document.getElementById('stego-password');
+  const password = (stegoPasswordEl && stegoPasswordEl.value.trim()) ? stegoPasswordEl.value.trim() : 'stego123';
+  fd.append('password', password);
+
+  // Send decoy fields if decoy mode is enabled
+  const decoyToggle = document.getElementById('decoy-toggle');
+  if (decoyToggle && decoyToggle.checked) {
+    const decoyPwEl = document.getElementById('decoy-password');
+    const decoyMsgEl = document.getElementById('decoy-message');
+    const decoyPw = decoyPwEl ? decoyPwEl.value.trim() : '';
+    const decoyMsg = decoyMsgEl ? decoyMsgEl.value.trim() : '';
+    if (decoyPw) fd.append('decoy_password', decoyPw);
+    if (decoyMsg) fd.append('decoy_message', decoyMsg);
+  }
+
+  console.log('[StegoChat] sendHiddenMessage() — message:', JSON.stringify(message), 'password:', password);
+  console.log('[StegoChat] FormData entries:');
+  for (const [key, val] of fd.entries()) {
+    console.log('  ', key, ':', (val instanceof Blob) ? `Blob(${val.size} bytes, ${val.type})` : val);
+  }
 
   try {
     const res = await fetch('/api/embed', { method: 'POST', body: fd });
@@ -401,9 +487,8 @@ async function sendHiddenMessage(message) {
       // update chat preview to avoid plaintext leakage
       const chat = chats.find(c => c.id === currentChatId);
       if (chat) { chat.lastPreview = '🔐 Hidden message'; renderChatList(); }
-      // clear composer input if present, otherwise clear panel message
+      // clear composer input
       if (messageInputEl) messageInputEl.value = '';
-      else document.getElementById('stego-message').value = '';
       imageUploadEl.value = '';
     } else {
       showToast('Embed failed: ' + (data.error || 'Unknown error'), 'error');
@@ -447,6 +532,17 @@ function addStegoImageToChat(stegoUrl, message, opts = {}) {
   chatMessagesEl.appendChild(msgDiv);
   // attach handlers for overlay buttons
   setTimeout(() => {
+    // Make image clickable to select for extraction via eye icon
+    const imgElement = msgDiv.querySelector('img[data-stego-url]');
+    if (imgElement) {
+      imgElement.style.cursor = 'pointer';
+      imgElement.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectChatImage(imgElement.dataset.stegoUrl);
+        showToast('Image selected! Click the eye icon to extract.', 'info');
+      });
+    }
+    
     msgDiv.querySelectorAll('.extract-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -497,36 +593,114 @@ function addMessageToChat(type, text, time, secure = false) {
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 }
 
-// Extract/analyze hidden message from image
+// Open extraction popup modal
+function openExtractionPopup() {
+  console.log('[StegoChat] Opening extraction popup');
+  
+  // Reset popup state
+  document.getElementById('extraction-file-input').value = '';
+  document.getElementById('extraction-password-input').value = '';
+  document.getElementById('extraction-preview-container').classList.add('hidden');
+  document.getElementById('extraction-preview-img').src = '';
+  document.getElementById('extraction-popup-extract').disabled = true;
+  
+  // Show popup
+  const popup = document.getElementById('extraction-popup');
+  popup.classList.remove('hidden');
+  popup.setAttribute('aria-hidden', 'false');
+}
+
+function closeExtractionPopup() {
+  console.log('[StegoChat] Closing extraction popup');
+  const popup = document.getElementById('extraction-popup');
+  popup.classList.add('hidden');
+  popup.setAttribute('aria-hidden', 'true');
+}
+
+// Extract/analyze hidden message from image using popup
 async function analyzeFile() {
-  if (!imageUploadEl.files || !imageUploadEl.files[0]) {
-    showToast('Please select an image to analyze', 'error');
+  openExtractionPopup();
+}
+
+// Handle extraction file input change
+function handleExtractionFileChange(e) {
+  const file = e.target.files[0];
+  const extractBtn = document.getElementById('extraction-popup-extract');
+  
+  if (!file) {
+    document.getElementById('extraction-preview-container').classList.add('hidden');
+    extractBtn.disabled = true;
     return;
   }
   
-  const file = imageUploadEl.files[0];
-  const fd = new FormData();
-  fd.append('image', file);
-  fd.append('password', 'stego123');
+  console.log('[StegoChat] File selected for extraction:', file.name);
+  
+  // Show preview for images
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('extraction-preview-img').src = e.target.result;
+      document.getElementById('extraction-preview-container').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  // Enable extract button
+  extractBtn.disabled = false;
+}
+
+// Handle extraction popup extract button click
+async function handleExtractionSubmit() {
+  const fileInput = document.getElementById('extraction-file-input');
+  const passwordInput = document.getElementById('extraction-password-input');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    showToast('Please select a file to extract from', 'error');
+    return;
+  }
+  
+  console.log('[StegoChat] Extracting from file:', file.name);
   
   try {
-    btnAnalyzeFile.disabled = true;
-    btnAnalyzeFile.innerHTML = '<div class="loading-spinner w-5 h-5"></div>';
+    // Disable button and show loading
+    const extractBtn = document.getElementById('extraction-popup-extract');
+    const originalText = extractBtn.innerText;
+    extractBtn.disabled = true;
+    extractBtn.innerHTML = '<div class="loading-spinner w-4 h-4 inline-block"></div>';
     
-    const res = await fetch('/api/extract', { method: 'POST', body: fd });
+    // Prepare form data
+    const fd = new FormData();
+    fd.append('image', file);
+    const password = passwordInput.value.trim();
+    if (password) {
+      fd.append('password', password);
+    }
+    
+    // Send extraction request
+    const res = await fetch('/api/extract', { 
+      method: 'POST', 
+      body: fd 
+    });
     const data = await res.json();
     
+    console.log('[StegoChat] Extraction response:', data);
+    
     if (data.status === 'ok') {
-      addMessageToChat('incoming', 'Extracted: ' + data.message, new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), true);
+      // Close popup and show result
+      closeExtractionPopup();
+      showModal('Hidden Message Extracted', data.message);
+      showToast('Message extracted successfully!', 'success');
     } else {
       showToast('Extract failed: ' + (data.error || 'No hidden message found'), 'error');
     }
   } catch (e) {
-    console.error('Extract error:', e);
+    console.error('[StegoChat] Extract error:', e);
     showToast('Network error while extracting', 'error');
   } finally {
-    btnAnalyzeFile.disabled = false;
-    btnAnalyzeFile.innerHTML = '<span class="material-symbols-outlined">visibility_off</span>';
+    const extractBtn = document.getElementById('extraction-popup-extract');
+    extractBtn.disabled = false;
+    extractBtn.innerText = 'Extract';
   }
 }
 
@@ -542,23 +716,27 @@ function toggleImageMode() {
   }
 }
 
-// Wipe transmission history
+// Wipe transmission history & zero-fill shred all files
 async function wipeHistory() {
-  if (!confirm('Wipe all transmission history for this channel?')) return;
+  if (!confirm('CRITICAL ACTION: This will permanently shred all files and transmissions with DoD standard zero-fill. Proceed?')) return;
   
   try {
-    const chat = chats.find(c => c.id === currentChatId);
-    if (chat) {
-      chat.messages = [];
-      chat.lastPreview = 'History wiped';
-      loadMessagesForChat(chat);
+    const res = await fetch('/api/shred-all', { method: 'POST' });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast('All data successfully shredded.', 'info');
+      chats = [];
+      selectChat(null);
       renderChatList();
+      if (chatMessagesEl) chatMessagesEl.innerHTML = '';
+    } else {
+      showToast('Failed to shred data', 'error');
     }
   } catch (e) {
     console.error('Wipe error:', e);
+    showToast('Network error during shred', 'error');
   }
 }
-
 // Search chats
 function searchChats(query) {
   window.lastSearchQuery = query || '';
@@ -594,6 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Event listeners
   btnNewChat?.addEventListener('click', createNewChat);
+  document.getElementById('btn-new-group')?.addEventListener('click', createNewGroupChat);
   btnSend?.addEventListener('click', sendMessage);
   
   // Modal wiring: copy + close + outside-click
@@ -618,10 +797,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Attach button now opens the Stealth Embed Panel directly (removed floating dropdown)
-  let coverImage = null; // File | null
+  // coverImageGlobal and setCoverImageGlobal are now defined at the top of the file (global scope)
+  // so sendMessage() and other functions can access them without scoping issues.
   
   function showCoverThumbnail(file) {
-    coverImage = file;
+    setCoverImageGlobal(file);
     const thumbEl = document.getElementById('cover-thumbnail');
     if (!thumbEl) return;
     const url = URL.createObjectURL(file);
@@ -639,6 +819,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
     `;
+    // set composer placeholder to secret mode
+    if (messageInputEl) messageInputEl.placeholder = 'Enter secret message to hide inside image...';
     // wire actions
     setTimeout(() => {
       const btnChange = document.getElementById('change-cover');
@@ -646,13 +828,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const panelCover = document.getElementById('cover-upload');
       if (btnChange) btnChange.addEventListener('click', () => (panelCover ? panelCover.click() : imageUploadEl.click()));
       if (btnRemove) btnRemove.addEventListener('click', () => {
-        coverImage = null;
+        setCoverImageGlobal(null);
         imageUploadEl.value = '';
         if (imageUploadEl._fetchedFile) imageUploadEl._fetchedFile = null;
         // also clear panel cover if present
         if (panelCover) { panelCover.value = ''; panelCover._fetchedBlob = null; }
         thumbEl.classList.add('hidden');
         thumbEl.innerHTML = '';
+        if (messageInputEl) messageInputEl.placeholder = 'Type a message...';
       });
     }, 50);
   }
@@ -661,7 +844,10 @@ document.addEventListener('DOMContentLoaded', () => {
   btnAttach?.addEventListener('click', (e) => {
     e.preventDefault();
     const panel = document.getElementById('stealth-panel');
-    if (panel) panel.classList.remove('hidden');
+    if (panel) {
+      panel.classList.remove('hidden');
+      if (hideToggleEl) hideToggleEl.checked = true;
+    }
     // keep focus on the panel; user can choose Select File or Fetch Random there
     e.stopPropagation();
   });
@@ -679,6 +865,37 @@ document.addEventListener('DOMContentLoaded', () => {
   hideToggleEl?.addEventListener('change', () => {});
   searchInputEl?.addEventListener('input', (e) => searchChats(e.target.value));
 
+  // Extraction popup event listeners
+  const extractionPopup = document.getElementById('extraction-popup');
+  const extractionFileInput = document.getElementById('extraction-file-input');
+  const extractionCancelBtn = document.getElementById('extraction-popup-cancel');
+  const extractionExtractBtn = document.getElementById('extraction-popup-extract');
+  
+  if (extractionFileInput) {
+    extractionFileInput.addEventListener('change', handleExtractionFileChange);
+  }
+  
+  if (extractionCancelBtn) {
+    extractionCancelBtn.addEventListener('click', closeExtractionPopup);
+  }
+  
+  if (extractionExtractBtn) {
+    extractionExtractBtn.addEventListener('click', handleExtractionSubmit);
+  }
+  
+  if (extractionPopup) {
+    // Close popup when clicking on overlay
+    extractionPopup.addEventListener('click', (e) => {
+      if (e.target === extractionPopup) closeExtractionPopup();
+    });
+    // Close popup with ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !extractionPopup.classList.contains('hidden')) {
+        closeExtractionPopup();
+      }
+    });
+  }
+
   // Stealth panel controls
   const coverUploadEl = document.getElementById('cover-upload');
   const btnCoverSelect = document.getElementById('btn-cover-select');
@@ -689,7 +906,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const decoyToggleEl = document.getElementById('decoy-toggle');
   const decoyAreaEl = document.getElementById('decoy-area');
   const btnCancelStego = document.getElementById('btn-cancel-stego');
-  const btnSendStego = document.getElementById('btn-send-stego');
   const tabMyImage = document.getElementById('tab-my-image');
   const tabRandomImage = document.getElementById('tab-random-image');
 
@@ -736,66 +952,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = document.createElement('img'); img.src = URL.createObjectURL(blob); img.className='w-32 h-20 object-cover rounded-md'; coverPreviewEl.appendChild(img);
         // store blob temporarily on element
         coverUploadEl._fetchedBlob = blob;
+        // show composer preview as selected cover
+        showCoverThumbnail(blob);
       } catch (err) { showToast('Failed to fetch random image', 'error'); }
       btnRandomFetch.disabled = false; btnRandomFetch.textContent = 'Fetch Random';
-    });
-  }
-
-  if (btnSendStego) {
-    btnSendStego.addEventListener('click', async (e) => {
-      e.preventDefault();
-      // perform validation
-      const panel = document.getElementById('stealth-panel');
-      const coverFile = coverUploadEl && (coverUploadEl.files && coverUploadEl.files[0]);
-      const fetched = coverUploadEl && coverUploadEl._fetchedBlob;
-      const payloadFile = payloadUploadEl && (payloadUploadEl.files && payloadUploadEl.files[0]);
-      const msg = (document.getElementById('stego-message')?.value || '').trim();
-      const password = document.getElementById('stego-password')?.value || '';
-      const decoyOn = decoyToggleEl && decoyToggleEl.checked;
-      const decoyPassword = document.getElementById('decoy-password')?.value || '';
-      const decoyMessage = document.getElementById('decoy-message')?.value || '';
-      const selfDestruct = document.getElementById('self-destruct')?.checked;
-
-      if (!coverFile && !fetched) { showToast('Stealth mode requires a cover file', 'error'); return; }
-      if (!msg && !payloadFile) { showToast('Stealth mode requires a cover file and message or payload', 'error'); return; }
-
-      // show loading
-      const statusEl = document.getElementById('stego-status'); statusEl.textContent = 'Embedding data...'; btnSendStego.disabled = true;
-
-      const fd = new FormData();
-      if (fetched) fd.append('image', fetched, 'random.jpg');
-      else if (coverFile) fd.append('image', coverFile);
-      if (payloadFile) fd.append('payload', payloadFile);
-      fd.append('message', msg || ' ');
-      if (password) fd.append('password', password);
-      if (decoyOn) { if (decoyPassword) fd.append('decoy_password', decoyPassword); if (decoyMessage) fd.append('decoy_message', decoyMessage); }
-      if (selfDestruct) fd.append('self_destruct','1');
-
-      try {
-        const res = await fetch('/api/embed', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.status === 'ok') {
-          // add stego message (image only)
-          addStegoImageToChat(data.stego_url, null, { embedded: true });
-          // update chat preview to avoid plaintext leakage
-          const chat = chats.find(c => c.id === currentChatId);
-          if (chat) { chat.lastPreview = '🔐 Hidden message'; renderChatList(); }
-          // clear inputs
-          document.getElementById('stego-message').value = '';
-          if (coverUploadEl) coverUploadEl.value = '';
-          if (payloadUploadEl) payloadUploadEl.value = '';
-          coverUploadEl._fetchedBlob = null;
-          document.getElementById('stealth-panel').classList.add('hidden');
-          statusEl.textContent = 'Embedded and sent ✓';
-          setTimeout(()=> statusEl.textContent = '', 2000);
-        } else {
-          showToast('Embed failed: ' + (data.error || 'Unknown error'), 'error');
-        }
-      } catch (err) {
-        console.error('embed panel error', err); showToast('Network error while embedding', 'error');
-      } finally {
-        btnSendStego.disabled = false; statusEl.textContent = '';
-      }
     });
   }
 
@@ -804,15 +964,10 @@ document.addEventListener('DOMContentLoaded', () => {
     tabRandomImage.addEventListener('click', () => { tabRandomImage.classList.add('bg-primary/10'); tabMyImage.classList.remove('bg-primary/10'); });
   }
   
-  // Enter to send: hook stego-message when composer input is not present
-  const stegoMsgEl = document.getElementById('stego-message');
+  // Enter to send: composer only
   if (messageInputEl) {
     messageInputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-    });
-  } else if (stegoMsgEl) {
-    stegoMsgEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-send-stego')?.click(); }
     });
   }
   
@@ -828,7 +983,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('mobile-nav-extract')?.addEventListener('click', () => { window.location.href = '/extract'; });
   document.getElementById('mobile-nav-settings')?.addEventListener('click', () => { window.location.href = '/settings'; });
   
-  // Wipe history
+  // Panic button & Wipe history
+  document.getElementById('btn-panic')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    wipeHistory();
+  });
   document.getElementById('btn-wipe-history')?.addEventListener('click', wipeHistory);
   
   // Load shared files demo

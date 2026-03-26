@@ -19,6 +19,48 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#3139
 .loading-spinner{border:2px solid rgba(192,193,255,0.3);border-radius:50%;border-top-color:#c0c1ff;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hidden{display:none}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 14, 32, 0.8);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  transition: opacity 0.3s ease;
+}
+.modal {
+  background: rgba(23, 31, 51, 0.95);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(192, 193, 255, 0.2);
+  padding: 2.5rem;
+  border-radius: 2rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.6);
+  transform: scale(1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: modal-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modal-appear {
+  from { opacity: 0; transform: scale(0.9) translateY(30px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-overlay.hidden { display: none; }
+.result-text {
+  font-family: 'Inter', monospace;
+  word-break: break-all;
+  white-space: pre-wrap;
+  background: rgba(6, 14, 32, 0.5);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(192, 193, 255, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
 </style>
 </head>
 <body class="bg-background text-on-surface font-body min-h-screen flex">
@@ -65,25 +107,31 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#3139
 <input class="w-full bg-surface-container-lowest border-none rounded-xl pl-10 pr-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-outline/50" placeholder="Scan transmissions..." type="text" id="search-input"/>
 </div>
 </div>
-<div class="flex-1 overflow-y-auto scrollbar-hide px-4 space-y-1 pb-24">
-<p class="px-4 py-2 text-[10px] font-bold text-outline uppercase tracking-[0.2em]">Active Channels</p>
-<div id="chat-list" class="space-y-1"></div>
+<div class="flex-1 overflow-y-auto scrollbar-hide px-4 pt-2">
+  <p class="px-4 py-2 text-[10px] font-bold text-outline uppercase tracking-[0.2em]">Active Channels</p>
+  <div id="chat-list" class="space-y-1"></div>
 </div>
-<div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#0b1326] via-[#0b1326] to-transparent">
-<button class="w-full bg-primary-container text-on-primary-container py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl shadow-primary/10" id="btn-new-chat">
-<span class="material-symbols-outlined text-sm">add_moderator</span>
-Secure Transmission
-</button>
-<div class="mt-4 flex items-center justify-around text-outline">
-<button class="hover:text-primary transition-colors flex items-center gap-2">
-<span class="material-symbols-outlined text-lg">help_outline</span>
-<span class="text-[10px] font-bold uppercase tracking-widest">Help</span>
-</button>
-<button class="hover:text-error transition-colors flex items-center gap-2">
-<span class="material-symbols-outlined text-lg">logout</span>
-<span class="text-[10px] font-bold uppercase tracking-widest">Logout</span>
-</button>
-</div>
+<div class="mt-auto px-6 py-4 bg-gradient-to-t from-[#0b1326] to-[#0b1326]/0">
+  <div class="flex flex-col gap-2 w-full">
+    <button class="w-full bg-primary-container text-on-primary-container py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl shadow-primary/10" id="btn-new-chat">
+      <span class="material-symbols-outlined text-lg">person_add</span>
+      Secure Direct Channel
+    </button>
+    <button class="w-full bg-surface-container-high text-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-3 active:scale-95 transition-all border border-primary/20" id="btn-new-group">
+      <span class="material-symbols-outlined text-lg">group_add</span>
+      Create Group Transmission
+    </button>
+  </div>
+  <div class="mt-6 flex items-center justify-center gap-8 text-outline">
+    <button class="hover:text-primary transition-colors flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+      <span class="material-symbols-outlined text-lg">help_outline</span>
+      Help
+    </button>
+    <button class="hover:text-error transition-colors flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+      <span class="material-symbols-outlined text-lg">logout</span>
+      Logout
+    </button>
+  </div>
 </div>
 </aside>
 <main class="flex flex-1 overflow-auto relative">
@@ -104,6 +152,10 @@ Secure Transmission
 </div>
 </div>
 <div class="flex items-center gap-4">
+<button class="bg-error/20 text-error hover:bg-error hover:text-on-error px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-error/50" id="btn-panic" title="IMMEDIATE SHREDDING">
+<span class="material-symbols-outlined text-sm">pesticide</span>
+Panic
+</button>
 <button class="text-[#c0c1ff]/60 hover:text-[#4ae176] transition-colors duration-300 active:scale-95" id="btn-analyze-file" title="Extract hidden message">
 <span class="material-symbols-outlined">visibility_off</span>
 </button>
@@ -134,8 +186,8 @@ Secure Transmission
     </div>
     <!-- Composer input removed: secret message input is now inside the Stealth Embed Panel -->
     <div class="flex-1 min-h-[40px] flex items-center px-2">
-      <!-- Placeholder for focus and spacing -->
-      <div class="w-full text-sm text-on-surface-variant">Compose with the Stealth Panel (click + to attach a cover image)</div>
+      <!-- Unified composer input (single source of truth) -->
+      <textarea id="message-input" rows="1" class="w-full resize-none bg-transparent border-none p-2 text-sm text-on-surface placeholder:text-outline/50 focus:outline-none" placeholder="Type a message..."></textarea>
     </div>
     <div class="flex items-center gap-2 mr-2">
       <span class="text-[10px] font-bold text-outline uppercase tracking-widest hidden sm:inline">Stealth Mode</span>
@@ -181,8 +233,7 @@ Secure Transmission
     </div>
 
     <div class="mt-3 grid grid-cols-1 gap-3">
-      <label class="text-sm font-bold">Secret Message</label>
-      <textarea id="stego-message" class="w-full p-2 bg-surface-container-high rounded-md text-sm" rows="3" placeholder="Optional message to embed (can be empty if payload file provided)"></textarea>
+      <!-- Secret message input was moved to the top composer. Keep controls related to embedding here. -->
 
       <div class="flex gap-2">
         <input id="stego-password" class="p-2 bg-surface-container-high rounded-md text-sm flex-1" placeholder="Password (optional)" />
@@ -197,8 +248,7 @@ Secure Transmission
       <label class="flex items-center gap-2 mt-1"><input type="checkbox" id="self-destruct"/> Self-destruct after viewing</label>
 
       <div class="flex items-center gap-3 mt-3">
-        <button id="btn-send-stego" class="px-4 py-2 bg-primary rounded-md text-on-primary-container font-bold">Send Hidden Message</button>
-        <button id="btn-cancel-stego" class="px-4 py-2 bg-surface-container-high rounded-md">Cancel</button>
+        <button id="btn-cancel-stego" class="px-4 py-2 bg-surface-container-high rounded-md">Close Panel</button>
         <div id="stego-status" class="text-sm text-on-surface-variant ml-auto"></div>
       </div>
     </div>
@@ -250,6 +300,42 @@ Wipe Transmission History
 <span class="text-[10px]">Vault</span>
 </a>
 </nav>
+  <!-- Extraction Popup Modal -->
+  <div id="extraction-popup" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="extraction-popup-title">
+      <h3 id="extraction-popup-title" class="text-lg font-bold">Extract Hidden Message</h3>
+      
+      <div class="mt-4 space-y-4">
+        <!-- File Input -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Select Image/File to Extract From</label>
+          <input type="file" id="extraction-file-input" accept="image/*,.png,.jpg,.jpeg,.bmp" class="w-full px-3 py-2 border border-outline rounded-md bg-surface">
+          <p class="text-xs text-on-surface-variant mt-1">Supports: PNG, JPG, BMP</p>
+        </div>
+
+        <!-- File Preview -->
+        <div id="extraction-preview-container" class="hidden">
+          <p class="text-xs font-medium text-on-surface-variant">Preview:</p>
+          <img id="extraction-preview-img" src="" alt="preview" class="mt-2 max-h-32 rounded-md border border-outline">
+        </div>
+
+        <!-- Password Input -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Password (Optional)</label>
+          <input type="password" id="extraction-password-input" placeholder="Leave blank if no password" class="w-full px-3 py-2 border border-outline rounded-md bg-surface">
+          <p class="text-xs text-on-surface-variant mt-1">Only if the image was password protected</p>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="mt-6 flex gap-2 justify-end">
+        <button id="extraction-popup-cancel" class="px-4 py-2 bg-surface-container-high rounded-md hover:bg-surface-container transition">Cancel</button>
+        <button id="extraction-popup-extract" class="px-4 py-2 bg-primary rounded-md text-on-primary-container font-bold hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>Extract</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Extraction Result Modal -->
   <div id="extract-modal" class="modal-overlay hidden" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <h3 id="modal-title" class="text-lg font-bold">Extraction Result</h3>

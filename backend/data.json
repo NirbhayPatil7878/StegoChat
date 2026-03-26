@@ -1,43 +1,185 @@
 {
   "chats": [
     {
-      "id": "0924e8fcb35e",
-      "type": "group",
-      "name": "new",
+      "id": "e9b431479143",
+      "type": "private",
+      "name": "",
       "members": [
-        "user1@gmail.com",
-        "user2@gmail.com"
+        "new"
       ],
-      "owner": "admin@gmail.com",
-      "createdAt": 1765099989395,
+      "owner": "Obsidian Vault",
+      "createdAt": 1774441497062,
       "lastPreview": "",
       "protected": false
     }
   ],
   "dead_drops": {
-    "776734d654b941b2": {
-      "message": "anonymous hello",
-      "createdAt": 1774354750492,
-      "expiresAt": 1774361950492,
+    "068d3c768b3a": {
+      "type": "stego_file",
+      "file": "stego_eof_946805.png",
+      "password": "tokentest",
+      "message": "File: test_note.txt",
+      "createdAt": 1774511567160,
+      "expiresAt": 1775116367160,
+      "used": false
+    },
+    "a5c29e461855": {
+      "type": "stego_file",
+      "file": "stego_eof_500118.png",
+      "password": "secure123",
+      "message": "File: test_note.txt",
+      "createdAt": 1774511610804,
+      "expiresAt": 1775116410804,
+      "used": false
+    },
+    "99f8592fa0a6": {
+      "type": "stego_file",
+      "file": "stego_eof_177848.png",
+      "password": "test123",
+      "message": "File: payload.txt",
+      "createdAt": 1774511852800,
+      "expiresAt": 1775116652800,
+      "used": false
+    },
+    "037ed6df7135": {
+      "type": "stego_file",
+      "file": "stego_eof_870743.png",
+      "password": "testpass",
+      "message": "File: secret.txt",
+      "createdAt": 1774511926416,
+      "expiresAt": 1775116726416,
+      "used": false
+    },
+    "befd197df7db": {
+      "type": "stego_file",
+      "file": "stego_eof_451009.png",
+      "password": "SecurePass2026",
+      "message": "File: research.txt",
+      "createdAt": 1774512032724,
+      "expiresAt": 1775116832724,
+      "used": false
+    },
+    "2848dc1d71ee": {
+      "type": "stego_file",
+      "file": "stego_eof_451664.png",
+      "password": "test123",
+      "message": "File: doc.txt",
+      "createdAt": 1774512455274,
+      "expiresAt": 1775117255274,
+      "used": false
+    },
+    "84d3e8bc32a6": {
+      "type": "stego_file",
+      "file": "stego_eof_783259.png",
+      "password": "AlphaSecret2026",
+      "message": "File: project.txt",
+      "createdAt": 1774512767562,
+      "expiresAt": 1775117567562,
+      "used": false
+    },
+    "2f3f30aa7f6c": {
+      "type": "stego_file",
+      "file": "stego_eof_442262.png",
+      "password": "pass123",
+      "message": "File: test.txt",
+      "createdAt": 1774512812383,
+      "expiresAt": 1775117612383,
       "used": true
     },
-    "244cefd32b384f25": {
-      "message": "hi iam nirbhay",
-      "createdAt": 1774354857108,
-      "expiresAt": 1774441257108,
-      "used": true
+    "1a2cc35de657": {
+      "type": "stego_file",
+      "file": "stego_eof_967878.png",
+      "password": "test",
+      "message": "File: data.txt",
+      "createdAt": 1774512921429,
+      "expiresAt": 1775117721429,
+      "used": true,
+      "retrievedAt": 1774512921492
     },
-    "27a895bbab374dda": {
-      "message": "hi",
-      "createdAt": 1774356196035,
-      "expiresAt": 1774442596035,
-      "used": true
+    "f86217e931d1": {
+      "type": "stego_file",
+      "file": "stego_eof_297629.png",
+      "password": "testpass",
+      "message": "File: test_payload.txt",
+      "createdAt": 1774513686783,
+      "expiresAt": 1775118486783,
+      "used": false
     },
-    "97185b0b3d894057": {
-      "message": "secret dead drop",
-      "createdAt": 1774397744256,
-      "expiresAt": 1774401344256,
-      "used": true
+    "02a1ab909b3d": {
+      "type": "stego_file",
+      "file": "stego_eof_967097.png",
+      "password": "testpass123",
+      "message": "File: test.txt",
+      "createdAt": 1774513729000,
+      "expiresAt": 1775118529000,
+      "used": true,
+      "retrievedAt": 1774513729006
+    },
+    "437149c9ecac": {
+      "type": "stego_file",
+      "file": "stego_eof_535892.png",
+      "password": "secure123",
+      "message": "File: test.txt",
+      "createdAt": 1774513863227,
+      "expiresAt": 1775118663227,
+      "used": true,
+      "retrievedAt": 1774513863233
+    },
+    "ac6ee81b5ba0": {
+      "type": "stego_file",
+      "file": "stego_eof_195401.png",
+      "password": "0",
+      "message": "File: screenshot-2026-01-22_14-38-23.png",
+      "createdAt": 1774514029530,
+      "expiresAt": 1775118829530,
+      "used": true,
+      "retrievedAt": 1774514049774
+    },
+    "1ca42ee06bda": {
+      "type": "stego_file",
+      "file": "stego_eof_615186.png",
+      "password": "test1h",
+      "message": "File: test.txt",
+      "createdAt": 1774519911819,
+      "expiresAt": 1774523511819,
+      "expiryHours": 1,
+      "used": true,
+      "retrievedAt": 1774519911846
+    },
+    "49a3f21128b9": {
+      "type": "stego_file",
+      "file": "stego_eof_670288.png",
+      "password": "test24h",
+      "message": "File: test.txt",
+      "createdAt": 1774519911830,
+      "expiresAt": 1774606311830,
+      "expiryHours": 24,
+      "used": false
+    },
+    "4ae73a9b6631": {
+      "type": "stego_file",
+      "file": "stego_eof_450088.png",
+      "password": "test5h",
+      "message": "File: test.txt",
+      "createdAt": 1774519911839,
+      "expiresAt": 1774537911839,
+      "expiryHours": 5,
+      "used": false
     }
+  },
+  "vault_password": "$2b$12$W32QpIbBeeHOas.5leQs4.A/UK99X.D50XZTIhKQMS6PrpVc8X8Mi",
+  "password_changed_at": 1774534363476,
+  "profile": {
+    "username": "TestUser123",
+    "email": "testuser@example.com",
+    "updated_at": 1774534362420
+  },
+  "settings": {
+    "encryption_protocol": "ChaCha20",
+    "embedding_method": "Spread Spectrum",
+    "auto_delete_messages": true,
+    "passphrase_lock": true,
+    "biometric_auth": false,
+    "updated_at": 1774534364144
   }
 }

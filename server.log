@@ -1,0 +1,13 @@
+[StegoChat] Starting Flask server
+[StegoChat] Frontend directory: /home/nirbhay/Downloads/StegoChat/StegoChat/backend/../frontend
+[StegoChat] Sample directory:   /home/nirbhay/Downloads/StegoChat/StegoChat/backend/../sample_images
+[StegoChat] Upload directory:   /home/nirbhay/Downloads/StegoChat/StegoChat/backend/../uploads
+[StegoChat] Data file:          /home/nirbhay/Downloads/StegoChat/StegoChat/backend/data.json
+[StegoChat] URL:                http://127.0.0.1:5000
+[StegoChat] Debug mode:         False
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [26/Mar/2026 18:52:05] "GET /api/settings HTTP/1.1" 200 -

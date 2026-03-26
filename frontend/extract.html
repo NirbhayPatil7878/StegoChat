@@ -74,25 +74,24 @@
     .material-symbols-outlined {
       font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
     }
-
     .glass-panel {
       background: rgba(45, 52, 73, 0.4);
       backdrop-filter: blur(20px);
     }
-
     .pulse-glow {
       box-shadow: 0 0 15px rgba(74, 225, 118, 0.3);
     }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
   </style>
 </head>
 <body class="bg-background text-on-background font-body min-h-screen flex overflow-hidden">
-  <aside class="hidden md:flex flex-col h-screen w-64 bg-[#0b1326] text-[#c0c1ff] text-sm tracking-wide border-r border-[#c0c1ff]/15 py-8 px-4 transition-all ease-in-out duration-200">
+  <aside class="hidden md:flex flex-col h-screen w-64 bg-[#0b1326] text-[#c0c1ff] text-sm tracking-wide border-r border-[#c0c1ff]/15 py-8 px-4 flex-shrink-0">
     <div class="mb-10 px-2 flex items-center gap-3">
       <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
         <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings:'FILL' 1;">shield_lock</span>
       </div>
       <div>
-        <h1 class="text-[#c0c1ff] font-black text-lg tracking-tighter">The Obsidian Vault</h1>
+        <h1 class="text-[#c0c1ff] font-black text-lg tracking-tighter">StegoChat</h1>
         <p class="text-[10px] text-secondary uppercase tracking-[0.2em] font-bold">Secure Tunnel Active</p>
       </div>
     </div>
@@ -106,7 +105,7 @@
         <span class="material-symbols-outlined">layers</span>
         <span>Embed</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff] bg-[#c0c1ff]/10 rounded-lg border-l-2 border-[#4ae176] transition-all" href="/extract.html">
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff] bg-[#c0c1ff]/10 rounded-lg border-l-2 border-[#4ae176] transition-all" href="/extract">
         <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">visibility_off</span>
         <span class="font-bold">Extract</span>
       </a>
@@ -117,10 +116,6 @@
     </nav>
 
     <div class="mt-auto space-y-1 pt-6 border-t border-[#c0c1ff]/10">
-      <button class="w-full mb-6 py-3 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-bold flex items-center justify-center gap-2 active:scale-95 duration-200">
-        <span class="material-symbols-outlined text-sm">add</span>
-        New Encryption
-      </button>
       <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 transition-all rounded-lg" href="/">
         <span class="material-symbols-outlined">help_outline</span>
         <span>Help</span>
@@ -132,23 +127,15 @@
     </div>
   </aside>
 
-  <main class="flex-1 flex flex-col relative h-screen overflow-y-auto">
-    <header class="sticky top-0 z-50 flex justify-between items-center w-full px-6 py-4 bg-[#0b1326]/60 backdrop-blur-xl shadow-[0_40px_40px_rgba(192,193,255,0.06)] tracking-tight">
+  <main class="flex-1 flex flex-col relative h-screen overflow-y-auto scrollbar-hide">
+    <header class="sticky top-0 z-50 flex justify-between items-center w-full px-6 py-4 bg-[#0b1326]/60 backdrop-blur-xl shadow-lg border-b border-[#c0c1ff]/10">
       <div class="flex items-center gap-4">
-        <div class="md:hidden">
-          <span class="material-symbols-outlined text-[#c0c1ff]">menu</span>
-        </div>
-        <span class="text-xl font-bold tracking-tighter text-[#c0c1ff]">StegoChat</span>
+        <span class="text-xl font-bold tracking-tighter text-[#c0c1ff]">Data Extraction Vault</span>
       </div>
-      <div class="hidden md:flex items-center gap-8">
-        <div class="relative">
-          <input class="bg-[#1a2333]/30 border-none rounded-full px-5 py-2 text-sm text-[#c0c1ff] w-64 focus:ring-1 focus:ring-primary outline-none" placeholder="Search decrypted vault..." type="text">
-          <span class="material-symbols-outlined absolute right-4 top-2 text-[#c0c1ff]/40 text-lg">search</span>
-        </div>
+      <div class="hidden md:flex items-center gap-6">
         <div class="flex items-center gap-4 text-[#c0c1ff]/60">
           <span class="material-symbols-outlined hover:text-[#4ae176] transition-colors cursor-pointer">notifications</span>
-          <span class="material-symbols-outlined hover:text-[#4ae176] transition-colors cursor-pointer">shield_lock</span>
-          <span class="material-symbols-outlined hover:text-[#4ae176] transition-colors cursor-pointer">settings</span>
+          <span class="material-symbols-outlined hover:text-[#4ae176] transition-colors cursor-pointer" id="btn-panic">pesticide</span>
         </div>
         <div class="h-8 w-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-secondary/30 pulse-glow">
           <img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPwaah4sQSm1rc7HkQJXTGSyouN6jH66w_hdb5XlvjV3-QeGnI0B1PH7pJTV_v7KkS9fpF8ffK6b-qqwJWGdmqxIuvwwpilqefb_BZJ6AUIzz0AU5-gl9M2fi8RHSiGXlab0RNA8O4hwaxHqMLeu14cySXUb-4kTYzantnEg49x0jXO8YJqdi5qeMhxzI0me_KLiyoCntoK99ziCaJdIsPum-O0qJkXLhi7ct7INCMoTKK9fFSHsVmK89HMHerObKtEXoVaV0BUA">
@@ -156,7 +143,7 @@
       </div>
     </header>
 
-    <div class="flex-1 p-8 lg:p-12 flex flex-col gap-12 max-w-6xl mx-auto w-full">
+    <div class="flex-1 p-8 lg:p-12 flex flex-col gap-12 max-w-6xl mx-auto w-full pt-16">
       <section class="space-y-4">
         <div class="inline-flex items-center gap-3 px-3 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
           <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
@@ -168,112 +155,321 @@
         </p>
       </section>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-24">
         <div class="lg:col-span-7 space-y-6">
           <div class="relative group cursor-pointer">
+            <input id="stego-input" class="absolute inset-0 opacity-0 cursor-pointer z-10" type="file" />
             <div class="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <div class="relative bg-surface-container-low rounded-2xl border-2 border-dashed border-outline-variant/30 hover:border-primary/50 transition-all p-12 flex flex-col items-center justify-center min-h-[400px] text-center">
-              <div class="w-20 h-20 rounded-3xl bg-surface-container-highest flex items-center justify-center mb-6 shadow-2xl">
-                <span class="material-symbols-outlined text-4xl text-primary" style="font-variation-settings:'wght' 200;">cloud_upload</span>
+              <div class="w-20 h-20 rounded-3xl bg-surface-container-highest flex items-center justify-center mb-6 shadow-2xl overflow-hidden">
+                <span id="stego-icon" class="material-symbols-outlined text-4xl text-primary" style="font-variation-settings:'wght' 200;">cloud_upload</span>
+                <img id="stego-preview" class="hidden w-full h-full object-cover" src="" />
               </div>
               <h3 class="text-xl font-headline font-bold text-on-surface mb-2">Upload Media to Extract</h3>
-              <p class="text-on-surface-variant mb-8 max-w-xs text-sm">Drag and drop images or upload suspicious files to scan for hidden vaults and extracted payloads.</p>
-              <div class="flex gap-4">
-                <button class="px-6 py-3 rounded-xl bg-surface-container-highest text-primary font-bold hover:bg-surface-container-high transition-colors text-sm border border-primary/20">Browse Files</button>
-                <button class="px-6 py-3 rounded-xl bg-primary text-on-primary-container font-bold hover:shadow-[0_0_20px_rgba(192,193,255,0.4)] transition-all text-sm">Paste URL</button>
-              </div>
+              <p id="stego-filename" class="text-on-surface-variant text-sm">Drag and drop images or upload suspicious files to scan for hidden payloads.</p>
             </div>
+          </div>
+
+          <!-- Extract Controls Section -->
+          <div class="glass-panel p-6 rounded-2xl border border-outline-variant/15 space-y-4">
+            <input id="extract-password" type="password" class="w-full bg-surface-container-lowest border border-outline-variant/15 rounded-xl p-4 text-sm text-on-surface placeholder-on-surface-variant/50 focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="Vault Access Key (optional)" />
+            <button id="btn-extract" class="w-full px-6 py-4 rounded-xl bg-primary text-on-primary-container font-bold hover:shadow-[0_0_20px_rgba(192,193,255,0.4)] transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">Start Deep Scan</button>
+          </div>
+
+          <!-- Dead Drop Token Retrieval Section -->
+          <div class="glass-panel p-6 rounded-2xl border border-outline-variant/15 space-y-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-secondary text-lg">key</span>
+              <p class="text-xs font-bold text-primary uppercase">Dead Drop Token</p>
+            </div>
+            <input id="dead-drop-token" type="text" class="w-full bg-surface-container-lowest border border-outline-variant/15 rounded-xl p-4 text-sm text-on-surface placeholder-on-surface-variant/50 focus:ring-2 focus:ring-primary focus:border-primary transition-all font-mono" placeholder="Paste dead drop token here" />
+            <button id="btn-fetch-token" class="w-full px-6 py-4 rounded-xl bg-secondary text-on-secondary font-bold hover:shadow-[0_0_20px_rgba(74,225,118,0.3)] transition-all text-sm">Retrieve from Dead Drop</button>
           </div>
 
           <div class="flex items-center justify-between p-6 bg-surface-container-lowest rounded-xl border border-outline-variant/10">
             <div class="flex items-center gap-4">
               <span class="material-symbols-outlined text-secondary">verified_user</span>
-              <span class="text-sm font-medium">Automatic hidden data detection enabled</span>
+              <span class="text-sm font-medium">LSB & EOF detection enabled</span>
             </div>
-            <button class="text-xs font-bold text-primary hover:underline uppercase tracking-widest">Configure Engine</button>
+            <button id="btn-remove-exif" class="text-xs font-bold text-primary hover:underline uppercase tracking-widest">Remove EXIF Metadata</button>
           </div>
         </div>
 
         <div class="lg:col-span-5 flex flex-col gap-6">
-          <div class="glass-panel p-8 rounded-2xl border border-outline-variant/15 h-full flex flex-col">
+          <div class="glass-panel p-8 rounded-2xl border border-outline-variant/15 flex flex-col min-h-[500px]">
             <div class="flex items-center justify-between mb-8">
               <h3 class="text-lg font-headline font-bold text-on-surface">Extraction Results</h3>
-              <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider border border-secondary/20">
-                <span class="material-symbols-outlined text-xs">check_circle</span>
-                Data Found
+              <div id="status-badge" class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-outline text-[10px] font-bold uppercase tracking-wider border border-outline-variant/10">
+                <span class="material-symbols-outlined text-xs">hourglass_empty</span>
+                Waiting...
               </div>
             </div>
 
-            <div class="flex-1 bg-surface-container-lowest/50 rounded-xl p-6 border border-outline-variant/10 mb-6 flex flex-col gap-4">
-              <div class="aspect-video rounded-lg overflow-hidden relative">
-                <img alt="Scanned Media" class="w-full h-full object-cover grayscale opacity-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlwc2KFh4okLPT_XDLT3bgM4q13ZP8Ixq5EAwTPWDTzJaKqXdNDNsmP4O1QVyUqKbXrtQ-CdKSWM5Tivf7zRiuIcpgZn88-dD5GAUKFY7-Fr_HMuPIcqUI6cuZMHIiA92CdahfyRTRls_UYXUZS1iX7LgW6cMBU7d6gzrkz8yap7eCn2GsWOPF-dV2U7luq-N9puoPvNEvj_J4zV-G75kNY6r_ppEHN0ws-aHwox2uj8t-S_WvfMa594Ze-9wA8wlq9t3mwuj5XQ">
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <div class="bg-surface-container-highest/80 backdrop-blur-md p-4 rounded-xl border border-primary/20 flex flex-col items-center">
-                    <span class="material-symbols-outlined text-3xl text-secondary mb-2" style="font-variation-settings:'FILL' 1;">description</span>
-                    <span class="text-[10px] font-bold text-on-surface/80 uppercase tracking-widest">MANIFEST.TXT</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="space-y-3">
-                <p class="text-xs text-on-surface-variant font-mono leading-relaxed bg-background/50 p-4 rounded-lg">
-                  // EXTRACTED CONTENT PREVIEW<br>
-                  ID: 882-VAULT-SEC<br>
-                  KEY: ****************<br>
-                  MSG: The drop is confirmed for 23:00 at the obsidian perimeter...
-                </p>
-              </div>
+            <div class="flex-1 bg-surface-container-lowest/50 rounded-xl p-6 border border-outline-variant/10 mb-6 flex flex-col gap-4 overflow-hidden">
+               <div id="result-display" class="hidden text-xs text-on-surface-variant font-mono leading-relaxed bg-background/50 p-4 rounded-lg overflow-auto h-full whitespace-pre-wrap">
+                  // EXTRACTED CONTENT READY
+               </div>
+               <div id="result-placeholder" class="h-full flex flex-col items-center justify-center text-outline/30 gap-4">
+                  <span class="material-symbols-outlined text-6xl">data_object</span>
+                  <p class="text-xs uppercase tracking-widest font-bold">No data extracted yet</p>
+               </div>
             </div>
 
             <div class="mt-auto grid grid-cols-2 gap-4">
-              <button class="py-4 rounded-xl bg-surface-container-high text-on-surface font-bold hover:bg-surface-container-highest transition-colors flex items-center justify-center gap-2">
+              <button id="btn-download-extracted" disabled class="disabled:opacity-30 py-4 rounded-xl bg-surface-container-high text-on-surface font-bold hover:bg-surface-container-highest transition-colors flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-lg">download</span>
                 Download
               </button>
-              <button class="py-4 rounded-xl bg-primary text-on-primary-container font-bold hover:shadow-[0_0_20px_rgba(192,193,255,0.4)] transition-all flex items-center justify-center gap-2">
+              <button id="btn-copy-extracted" disabled class="disabled:opacity-30 py-4 rounded-xl bg-primary text-on-primary-container font-bold hover:shadow-[0_0_20px_rgba(192,193,255,0.4)] transition-all flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-lg">content_copy</span>
                 Copy
               </button>
             </div>
           </div>
-
+          
           <div class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 flex items-center justify-between">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <span class="material-symbols-outlined text-primary">history</span>
               </div>
               <div>
-                <p class="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Recent Extractions</p>
-                <p class="text-sm font-medium">12 files recovered this week</p>
+                <p class="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Session Security</p>
+                <p class="text-sm font-medium">Volatile RAM Extraction Active</p>
               </div>
             </div>
-            <span class="material-symbols-outlined text-on-surface-variant">arrow_forward_ios</span>
           </div>
         </div>
       </div>
     </div>
-
-    <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10"></div>
-    <div class="absolute top-40 left-20 w-[300px] h-[300px] bg-secondary/5 rounded-full blur-[100px] -z-10"></div>
   </main>
 
-  <div class="md:hidden fixed bottom-0 left-0 right-0 bg-[#0b1326]/80 backdrop-blur-xl flex justify-around items-center py-4 border-t border-outline-variant/10 z-50">
-    <button class="flex flex-col items-center gap-1 text-[#c0c1ff]/60">
-      <span class="material-symbols-outlined">chat_bubble</span>
-      <span class="text-[10px]">Messages</span>
-    </button>
-    <button class="flex flex-col items-center gap-1 text-[#c0c1ff]/60">
-      <span class="material-symbols-outlined">layers</span>
-      <span class="text-[10px]">Embed</span>
-    </button>
-    <button class="flex flex-col items-center gap-1 text-primary">
-      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">visibility_off</span>
-      <span class="text-[10px] font-bold">Extract</span>
-    </button>
-    <button class="flex flex-col items-center gap-1 text-[#c0c1ff]/60">
-      <span class="material-symbols-outlined">tune</span>
-      <span class="text-[10px]">Settings</span>
-    </button>
-  </div>
+  <script>
+    const stegoInput = document.getElementById('stego-input');
+    const btnExtract = document.getElementById('btn-extract');
+    const passwordInput = document.getElementById('extract-password');
+    const btnRemoveExif = document.getElementById('btn-remove-exif');
+    const resultDisplay = document.getElementById('result-display');
+    const resultPlaceholder = document.getElementById('result-placeholder');
+    const statusBadge = document.getElementById('status-badge');
+    const btnDownloadExtracted = document.getElementById('btn-download-extracted');
+    const btnCopyExtracted = document.getElementById('btn-copy-extracted');
+    const stegoPreview = document.getElementById('stego-preview');
+    const stegoIcon = document.getElementById('stego-icon');
+    const stegoFilename = document.getElementById('stego-filename');
+    
+    // Dead Drop elements
+    const deadDropTokenInput = document.getElementById('dead-drop-token');
+    const btnFetchToken = document.getElementById('btn-fetch-token');
+
+    let selectedFile = null;
+    let extractedData = null;
+
+    // Enable/disable extract button based on file selection
+    stegoInput.addEventListener('change', (e) => {
+      selectedFile = e.target.files[0];
+      console.log('[Extract] File selected:', selectedFile);
+      
+      if (selectedFile) {
+        stegoFilename.textContent = selectedFile.name;
+        btnExtract.disabled = false;
+        
+        // Show preview for images
+        if (selectedFile.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (re) => {
+            stegoPreview.src = re.target.result;
+            stegoPreview.classList.remove('hidden');
+            stegoIcon.classList.add('hidden');
+          };
+          reader.readAsDataURL(selectedFile);
+        } else {
+          // Hide preview for non-images
+          stegoPreview.classList.add('hidden');
+          stegoIcon.classList.remove('hidden');
+        }
+      } else {
+        btnExtract.disabled = true;
+        stegoPreview.classList.add('hidden');
+        stegoIcon.classList.remove('hidden');
+        stegoFilename.textContent = 'Drag and drop images or upload suspicious files to scan for hidden payloads.';
+      }
+    });
+
+    // Initially disable extract button
+    btnExtract.disabled = true;
+
+    btnExtract.addEventListener('click', async () => {
+      if (!selectedFile) {
+        alert('Please upload a file.');
+        return;
+      }
+
+      console.log('[Extract] Starting extraction...');
+      console.log('[Extract] File:', selectedFile);
+      console.log('[Extract] Password provided:', !!passwordInput.value);
+
+      btnExtract.disabled = true;
+      btnExtract.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin inline-block mr-2">sync</span>Scanning DNA...';
+      statusBadge.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Scanning...';
+      statusBadge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-outline text-[10px] font-bold uppercase tracking-wider border border-outline-variant/10';
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      // Only add password if provided
+      if (passwordInput.value) {
+        formData.append('password', passwordInput.value);
+      }
+
+      try {
+        console.log('[Extract] Sending request to /extract...');
+        const res = await fetch('/extract', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        console.log('[Extract] Response:', data);
+
+        if (res.ok && data.type) {
+          // Success: data extracted
+          statusBadge.innerHTML = '<span class="material-symbols-outlined text-secondary text-xs">check_circle</span> Data Found';
+          statusBadge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider border border-secondary/20';
+          
+          resultPlaceholder.classList.add('hidden');
+          resultDisplay.classList.remove('hidden');
+          extractedData = data.data;
+
+          if (data.type === 'text') {
+            resultDisplay.textContent = `// EXTRACTED TEXT MESSAGE\n\n${data.data}`;
+            btnCopyExtracted.disabled = false;
+            btnDownloadExtracted.disabled = true;
+          } else if (data.type === 'file') {
+            const filename = data.filename || 'extracted_payload.bin';
+            resultDisplay.textContent = `// EXTRACTED FILE\n\nFilename: ${filename}\n\nReady for download.`;
+            btnDownloadExtracted.disabled = false;
+            btnDownloadExtracted.onclick = () => {
+              // Download from URL with proper filename
+              const a = document.createElement('a');
+              a.href = data.data;
+              a.download = filename;
+              a.click();
+            };
+            btnCopyExtracted.disabled = true;
+          } else {
+            resultDisplay.textContent = `// EXTRACTED DATA\n\nType: ${data.type}\nData: ${data.data}`;
+            btnCopyExtracted.disabled = false;
+            btnDownloadExtracted.disabled = true;
+          }
+        } else {
+          // Error or no data found
+          const error = data.error || 'No hidden data found';
+          console.log('[Extract] Error:', error);
+          statusBadge.innerHTML = '<span class="material-symbols-outlined text-error text-xs">error</span> No Data';
+          statusBadge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-error-container/20 text-error text-[10px] font-bold uppercase tracking-wider border border-error/20';
+          
+          resultPlaceholder.classList.remove('hidden');
+          resultDisplay.classList.add('hidden');
+          alert('Error: ' + error);
+        }
+      } catch (e) {
+        console.error('[Extract] Exception:', e);
+        statusBadge.innerHTML = '<span class="material-symbols-outlined text-error text-xs">error</span> Failed';
+        statusBadge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-error-container/20 text-error text-[10px] font-bold uppercase tracking-wider border border-error/20';
+        resultPlaceholder.classList.remove('hidden');
+        resultDisplay.classList.add('hidden');
+        alert('Extraction engine error: ' + e.message);
+      } finally {
+        btnExtract.disabled = false;
+        btnExtract.innerHTML = 'Start Deep Scan';
+      }
+    });
+
+    // Copy extracted text
+    btnCopyExtracted.addEventListener('click', () => {
+      if (extractedData) {
+        navigator.clipboard.writeText(extractedData).then(() => {
+          alert('Data copied to clipboard!');
+        }).catch(() => {
+          alert('Failed to copy data');
+        });
+      }
+    });
+
+    btnRemoveExif.addEventListener('click', async () => {
+      if (!selectedFile) { alert('Upload media first.'); return; }
+      const fd = new FormData();
+      fd.append('image', selectedFile);
+      try {
+        const res = await fetch('/api/remove-exif', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.status === 'ok') {
+           window.open(data.url);
+           alert('EXIF Stripped Successfully.');
+        }
+      } catch (e) { alert('EXIF stripping failed.'); }
+    });
+
+    // Dead Drop Token Retrieval
+    btnFetchToken.addEventListener('click', async () => {
+      const token = deadDropTokenInput.value.trim();
+      
+      if (!token) {
+        alert('Please enter a dead drop token');
+        return;
+      }
+
+      btnFetchToken.disabled = true;
+      btnFetchToken.innerHTML = '<span>Retrieving...</span>';
+
+      try {
+        console.log('[Extract] Fetching dead drop token:', token);
+        const res = await fetch(`/api/dead-drop-file/${token}`);
+        const data = await res.json();
+
+        if (res.ok && data.status === 'ok') {
+          console.log('[Extract] Dead drop retrieved:', data);
+          
+          // Mark as used and show result
+          statusBadge.innerHTML = '<span class="material-symbols-outlined text-secondary text-xs">check_circle</span> Retrieved';
+          statusBadge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/20 text-secondary text-[10px] font-bold uppercase tracking-wider border border-secondary/20';
+          
+          resultPlaceholder.classList.add('hidden');
+          resultDisplay.classList.remove('hidden');
+          
+          // Handle stego file from dead drop
+          const messagePreview = data.message || 'Stego file retrieved';
+          resultDisplay.textContent = `// DEAD DROP STEGO\n\n${messagePreview}\n\nFile URL: ${data.file_url}\nPassword: ${data.password}`;
+          
+          btnDownloadExtracted.disabled = false;
+          btnDownloadExtracted.onclick = () => {
+            const a = document.createElement('a');
+            a.href = data.file_url;
+            a.download = 'stego_from_deadrop.png';
+            a.click();
+          };
+          
+          btnCopyExtracted.disabled = false;
+          btnCopyExtracted.onclick = () => {
+            navigator.clipboard.writeText(`File: ${data.file_url}\nPassword: ${data.password}`);
+            alert('Details copied to clipboard!');
+          };
+          
+        } else {
+          const error = data.error || 'Token not found or expired';
+          console.log('[Extract] Error:', error);
+          statusBadge.innerHTML = '<span class="material-symbols-outlined text-error text-xs">error</span> Invalid Token';
+          statusBadge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-error-container/20 text-error text-[10px] font-bold uppercase tracking-wider border border-error/20';
+          alert('Error: ' + error);
+        }
+      } catch (e) {
+        console.error('[Extract] Exception:', e);
+        alert('Failed to retrieve dead drop: ' + e.message);
+      } finally {
+        btnFetchToken.disabled = false;
+        btnFetchToken.innerHTML = 'Retrieve from Dead Drop';
+      }
+    });
+  </script>
 </body>
 </html>

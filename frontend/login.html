@@ -139,13 +139,13 @@
         </div>
 
         <div class="space-y-2">
-          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Key</label>
+          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Key (Real)</label>
           <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-password" placeholder="Create a secret key" required type="password">
         </div>
 
         <div class="space-y-2">
-          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Confirm Vault Key</label>
-          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-confirm" placeholder="Repeat your secret key" required type="password">
+          <label class="font-label text-[10px] font-bold text-error/70 tracking-[0.1em] uppercase block px-1">Duress Key (Fake)</label>
+          <input class="w-full bg-surface-container-lowest border-0 border-b border-error/30 focus:border-error focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-duress" placeholder="Key to show clean vault" required type="password">
         </div>
 
         <button class="w-full bg-gradient-to-r from-primary to-surface-tint hover:brightness-110 active:scale-[0.98] transition-all py-4 rounded-xl text-[#0d0096] font-headline font-bold text-sm shadow-[0_8px_20px_rgba(192,193,255,0.2)]" type="submit">Create Identity</button>
@@ -203,15 +203,15 @@
       localStorage.setItem('secretsnap_users', JSON.stringify(users));
     }
 
-    registerForm.onsubmit = (e) => {
+    registerForm.onsubmit = async (e) => {
       e.preventDefault();
       const email = document.getElementById('reg-email').value.trim();
       const username = document.getElementById('reg-username').value.trim();
       const pw = document.getElementById('reg-password').value;
-      const pw2 = document.getElementById('reg-confirm').value;
+      const duress = document.getElementById('reg-duress').value;
 
-      if (pw !== pw2) {
-        alert('Passwords do not match');
+      if (pw === duress) {
+        alert('Duress key must be different from real key');
         return;
       }
       const users = getUsers();
@@ -219,22 +219,37 @@
         alert('User already exists');
         return;
       }
-      users.push({ email, username, password: pw });
+      users.push({ email, username, password: pw, duress_password: duress });
       saveUsers(users);
       alert('Account created. Enter the vault with your new identity.');
       activateTab('login');
     };
 
-    loginForm.onsubmit = (e) => {
+    loginForm.onsubmit = async (e) => {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
       const pw = document.getElementById('login-password').value;
       const users = getUsers();
+      
       const user = users.find((entry) => entry.email === email && entry.password === pw);
+      const duressUser = users.find((entry) => entry.email === email && entry.duress_password === pw);
+
+      if (duressUser) {
+        // TRIGGER SHREDDER ON DURESS
+        try {
+          await fetch('/api/shred-all', { method: 'POST' });
+        } catch (err) {}
+        duressUser.isDuress = true;
+        sessionStorage.setItem('secretsnap_current_user', JSON.stringify(duressUser));
+        window.location.href = '/chat';
+        return;
+      }
+
       if (!user) {
         alert('Invalid credentials');
         return;
       }
+      user.isDuress = false;
       sessionStorage.setItem('secretsnap_current_user', JSON.stringify(user));
       window.location.href = '/chat';
     };

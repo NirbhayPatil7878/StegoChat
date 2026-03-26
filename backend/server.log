@@ -1,0 +1,11 @@
+[StegoChat] Starting Flask server
+[StegoChat] Frontend directory: /home/nirbhay/Downloads/StegoChat/StegoChat/backend/../frontend
+[StegoChat] Sample directory:   /home/nirbhay/Downloads/StegoChat/StegoChat/backend/../sample_images
+[StegoChat] Upload directory:   /home/nirbhay/Downloads/StegoChat/StegoChat/backend/../uploads
+[StegoChat] Data file:          /home/nirbhay/Downloads/StegoChat/StegoChat/backend/data.json
+[StegoChat] URL:                http://127.0.0.1:5000
+[StegoChat] Debug mode:         False
+ * Serving Flask app 'app'
+ * Debug mode: off
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.

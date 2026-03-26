@@ -189,6 +189,63 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-8 space-y-8">
+          <!-- Profile Section -->
+          <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+            <div class="flex items-center gap-3 mb-6">
+              <span class="material-symbols-outlined text-primary">person</span>
+              <h3 class="text-lg font-bold">Profile Information</h3>
+            </div>
+            <form id="profile-form" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-on-surface mb-2">Username</label>
+                <input id="profile-username" type="text" placeholder="Your username" class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg px-4 py-2.5 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-on-surface mb-2">Email Address</label>
+                <input id="profile-email" type="email" placeholder="your@email.com" class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg px-4 py-2.5 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              </div>
+              <div class="flex gap-3 pt-4">
+                <button type="submit" class="flex-1 py-2.5 bg-primary text-on-primary rounded-lg font-medium hover:brightness-110 transition-all">
+                  Save Profile
+                </button>
+                <button type="button" id="profile-cancel" class="px-6 py-2.5 border border-outline-variant/20 text-on-surface rounded-lg font-medium hover:bg-surface-container-highest transition-all">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Change Password Section -->
+          <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+            <div class="flex items-center gap-3 mb-6">
+              <span class="material-symbols-outlined text-secondary">lock</span>
+              <h3 class="text-lg font-bold">Change Password</h3>
+            </div>
+            <form id="password-form" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-on-surface mb-2">Current Password</label>
+                <input id="password-old" type="password" placeholder="Enter your current password" class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg px-4 py-2.5 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-on-surface mb-2">New Password</label>
+                <input id="password-new" type="password" placeholder="Enter a new password (min 6 characters)" class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg px-4 py-2.5 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <p class="text-xs text-on-surface-variant mt-1">Minimum 6 characters recommended</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-on-surface mb-2">Confirm New Password</label>
+                <input id="password-confirm" type="password" placeholder="Confirm your new password" class="w-full bg-surface-container-highest border border-outline-variant/20 rounded-lg px-4 py-2.5 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              </div>
+              <div class="flex gap-3 pt-4">
+                <button type="submit" class="flex-1 py-2.5 bg-secondary text-on-secondary rounded-lg font-medium hover:brightness-110 transition-all">
+                  Update Password
+                </button>
+                <button type="button" id="password-cancel" class="px-6 py-2.5 border border-outline-variant/20 text-on-surface rounded-lg font-medium hover:bg-surface-container-highest transition-all">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
           <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
             <div class="flex items-center gap-3 mb-6">
               <span class="material-symbols-outlined text-primary">enhanced_encryption</span>
@@ -200,7 +257,7 @@
                   <p class="font-semibold text-on-surface">Standard Protocol</p>
                   <p class="text-sm text-on-surface-variant">The primary cipher used for message wrapping.</p>
                 </div>
-                <select class="bg-surface-container-highest border-none rounded-lg text-sm text-primary focus:ring-primary/50 transition-all px-4 py-2">
+                <select id="encryption-protocol" class="bg-surface-container-highest border-none rounded-lg text-sm text-primary focus:ring-primary/50 transition-all px-4 py-2">
                   <option>AES-256 (Recommended)</option>
                   <option>RSA-4096</option>
                   <option>ChaCha20</option>
@@ -211,7 +268,7 @@
                   <p class="font-semibold text-on-surface">Default Embedding Type</p>
                   <p class="text-sm text-on-surface-variant">Method of hiding data within media files.</p>
                 </div>
-                <select class="bg-surface-container-highest border-none rounded-lg text-sm text-primary focus:ring-primary/50 transition-all px-4 py-2">
+                <select id="embedding-method" class="bg-surface-container-highest border-none rounded-lg text-sm text-primary focus:ring-primary/50 transition-all px-4 py-2">
                   <option>Least Significant Bit (LSB)</option>
                   <option>Parity Check</option>
                   <option>Spread Spectrum</option>
@@ -281,10 +338,10 @@
             <h3 class="text-sm font-bold text-error uppercase tracking-widest mb-4">Danger Zone</h3>
             <p class="text-xs text-on-surface-variant mb-6">Actions performed here are permanent and cannot be reversed by system administrators.</p>
             <div class="space-y-3">
-              <button class="w-full py-2.5 rounded-lg border border-error/30 text-error text-sm font-medium hover:bg-error/5 transition-colors">
+              <button id="btn-wipe-local" class="w-full py-2.5 rounded-lg border border-error/30 text-error text-sm font-medium hover:bg-error/5 transition-colors">
                 Wipe Local Database
               </button>
-              <button class="w-full py-2.5 rounded-lg bg-error text-on-error text-sm font-bold hover:brightness-110 transition-all">
+              <button id="btn-terminate-identity" class="w-full py-2.5 rounded-lg bg-error text-on-error text-sm font-bold hover:brightness-110 transition-all">
                 Terminate Identity
               </button>
             </div>
@@ -320,5 +377,413 @@
       <span class="text-[10px]">Profile</span>
     </a>
   </nav>
+
+  <script>
+    // Settings Management System
+    let currentSettings = {};
+    let currentProfile = {};
+
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 px-4 py-3 rounded-lg text-sm font-medium z-50 
+        ${type === 'success' ? 'bg-secondary text-on-surface' : ''}
+        ${type === 'error' ? 'bg-error text-on-error' : ''}
+        ${type === 'info' ? 'bg-primary text-on-primary-container' : ''}
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Load settings from backend
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.status === 'ok') {
+          currentSettings = data.settings;
+          applySettingsToUI();
+        }
+      } catch (e) {
+        console.error('Failed to load settings:', e);
+        showToast('Failed to load settings', 'error');
+      }
+    }
+
+    // Load profile from backend
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/settings/profile');
+        const data = await res.json();
+        if (data.status === 'ok') {
+          currentProfile = data.profile;
+          applyProfileToUI();
+        }
+      } catch (e) {
+        console.error('Failed to load profile:', e);
+        showToast('Failed to load profile', 'error');
+      }
+    }
+
+    // Apply settings to UI
+    function applySettingsToUI() {
+      // Set encryption protocol
+      const encProtocolSelect = document.getElementById('encryption-protocol');
+      if (encProtocolSelect && currentSettings.encryption_protocol) {
+        // Map protocol name to option text
+        const protocolMap = {
+          'AES-256': 'AES-256 (Recommended)',
+          'RSA-4096': 'RSA-4096',
+          'ChaCha20': 'ChaCha20'
+        };
+        encProtocolSelect.value = protocolMap[currentSettings.encryption_protocol] || 'AES-256 (Recommended)';
+      }
+
+      // Set embedding method
+      const embeddingSelect = document.getElementById('embedding-method');
+      if (embeddingSelect && currentSettings.embedding_method) {
+        // Map method name to option text
+        const methodMap = {
+          'LSB': 'Least Significant Bit (LSB)',
+          'Parity Check': 'Parity Check',
+          'Spread Spectrum': 'Spread Spectrum'
+        };
+        embeddingSelect.value = methodMap[currentSettings.embedding_method] || 'Least Significant Bit (LSB)';
+      }
+
+      // Set toggle states
+      const toggles = document.querySelectorAll('button.relative.inline-flex');
+      if (toggles[0]) {
+        if (currentSettings.auto_delete_messages) {
+          toggles[0].classList.add('bg-secondary-container');
+          toggles[0].classList.remove('bg-surface-container-highest');
+          toggles[0].querySelector('span').classList.add('translate-x-5');
+          toggles[0].querySelector('span').classList.remove('translate-x-0');
+          toggles[0].querySelector('span').classList.add('bg-white');
+          toggles[0].querySelector('span').classList.remove('bg-on-surface-variant');
+        }
+      }
+      if (toggles[1]) {
+        if (currentSettings.passphrase_lock) {
+          toggles[1].classList.add('bg-secondary-container');
+          toggles[1].classList.remove('bg-surface-container-highest');
+          toggles[1].querySelector('span').classList.add('translate-x-5');
+          toggles[1].querySelector('span').classList.remove('translate-x-0');
+          toggles[1].querySelector('span').classList.add('bg-white');
+          toggles[1].querySelector('span').classList.remove('bg-on-surface-variant');
+        }
+      }
+      if (toggles[2]) {
+        if (currentSettings.biometric_auth) {
+          toggles[2].classList.add('bg-secondary-container');
+          toggles[2].classList.remove('bg-surface-container-highest');
+          toggles[2].querySelector('span').classList.add('translate-x-5');
+          toggles[2].querySelector('span').classList.remove('translate-x-0');
+          toggles[2].querySelector('span').classList.add('bg-white');
+          toggles[2].querySelector('span').classList.remove('bg-on-surface-variant');
+        }
+      }
+    }
+
+    // Apply profile to UI
+    function applyProfileToUI() {
+      // Populate profile form fields
+      const usernameField = document.getElementById('profile-username');
+      const emailField = document.getElementById('profile-email');
+      
+      if (usernameField && currentProfile.username) {
+        usernameField.value = currentProfile.username;
+      }
+      if (emailField && currentProfile.email) {
+        emailField.value = currentProfile.email;
+      }
+      
+      // Update encrypted items count
+      const encryptedCountEl = document.querySelector('p.text-2xl.font-bold.text-primary');
+      if (encryptedCountEl) {
+        fetch('/api/settings/statistics')
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'ok') {
+              encryptedCountEl.textContent = data.statistics.encrypted_items;
+            }
+          });
+      }
+    }
+
+    // Save profile
+    async function saveProfile(e) {
+      e.preventDefault();
+      try {
+        const username = document.getElementById('profile-username').value.trim();
+        const email = document.getElementById('profile-email').value.trim();
+
+        if (!username || !email) {
+          showToast('Please fill in all fields', 'error');
+          return;
+        }
+
+        if (username.length < 3 || username.length > 50) {
+          showToast('Username must be 3-50 characters', 'error');
+          return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showToast('Please enter a valid email address', 'error');
+          return;
+        }
+
+        const res = await fetch('/api/settings/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email })
+        });
+
+        const data = await res.json();
+        if (data.status === 'ok') {
+          currentProfile = data.profile;
+          showToast('Profile updated successfully', 'success');
+        } else {
+          showToast(data.error || 'Failed to update profile', 'error');
+        }
+      } catch (e) {
+        console.error('Failed to save profile:', e);
+        showToast('Network error while saving profile', 'error');
+      }
+    }
+
+    // Change password
+    async function changePassword(e) {
+      e.preventDefault();
+      try {
+        const oldPassword = document.getElementById('password-old').value;
+        const newPassword = document.getElementById('password-new').value;
+        const confirmPassword = document.getElementById('password-confirm').value;
+
+        if (!oldPassword || !newPassword || !confirmPassword) {
+          showToast('Please fill in all password fields', 'error');
+          return;
+        }
+
+        if (newPassword.length < 6) {
+          showToast('New password must be at least 6 characters', 'error');
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          showToast('New passwords do not match', 'error');
+          return;
+        }
+
+        const res = await fetch('/api/settings/password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            old_password: oldPassword,
+            new_password: newPassword,
+            confirm_password: confirmPassword
+          })
+        });
+
+        const data = await res.json();
+        if (data.status === 'ok') {
+          document.getElementById('password-form').reset();
+          showToast('Password changed successfully', 'success');
+        } else {
+          showToast(data.error || 'Failed to change password', 'error');
+        }
+      } catch (e) {
+        console.error('Failed to change password:', e);
+        showToast('Network error while changing password', 'error');
+      }
+    }
+
+
+    // Save settings
+    async function saveSettings() {
+      try {
+        // Collect form values
+        const selects = document.querySelectorAll('select');
+        const settings = {
+          encryption_protocol: selects[0]?.value || 'AES-256',
+          embedding_method: selects[1]?.value || 'LSB'
+        };
+
+        // Add toggle settings
+        const toggles = document.querySelectorAll('button.relative.inline-flex');
+        settings.auto_delete_messages = toggles[0]?.classList.contains('bg-secondary-container');
+        settings.passphrase_lock = toggles[1]?.classList.contains('bg-secondary-container');
+        settings.biometric_auth = toggles[2]?.classList.contains('bg-secondary-container');
+
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+
+        const data = await res.json();
+        if (data.status === 'ok') {
+          currentSettings = data.settings;
+          showToast('Settings saved successfully', 'success');
+        } else {
+          showToast(data.error || 'Failed to save settings', 'error');
+        }
+      } catch (e) {
+        console.error('Failed to save settings:', e);
+        showToast('Network error while saving settings', 'error');
+      }
+    }
+
+    // Toggle switches
+    function initializeToggles() {
+      const toggles = document.querySelectorAll('button.relative.inline-flex');
+      toggles.forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          const span = toggle.querySelector('span');
+          toggle.classList.toggle('bg-secondary-container');
+          toggle.classList.toggle('bg-surface-container-highest');
+          span.classList.toggle('translate-x-5');
+          span.classList.toggle('translate-x-0');
+          span.classList.toggle('bg-white');
+          span.classList.toggle('bg-on-surface-variant');
+          saveSettings();
+        });
+      });
+    }
+
+    // Select change handlers
+    function initializeSelects() {
+      const selects = document.querySelectorAll('select');
+      selects.forEach(select => {
+        select.addEventListener('change', saveSettings);
+      });
+    }
+
+    // Data management functions
+    async function exportSettings() {
+      try {
+        const res = await fetch('/api/settings/export');
+        const data = await res.json();
+        if (data.status === 'ok') {
+          const dataStr = JSON.stringify(data.data, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `stegochat-backup-${Date.now()}.json`;
+          link.click();
+          showToast('Settings exported successfully', 'success');
+        }
+      } catch (e) {
+        console.error('Export failed:', e);
+        showToast('Failed to export settings', 'error');
+      }
+    }
+
+    async function importSettings() {
+      try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          const text = await file.text();
+          const importData = JSON.parse(text);
+
+          const res = await fetch('/api/settings/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(importData)
+          });
+
+          const data = await res.json();
+          if (data.status === 'ok') {
+            showToast('Settings imported successfully', 'success');
+            loadSettings();
+          } else {
+            showToast(data.error || 'Import failed', 'error');
+          }
+        };
+        input.click();
+      } catch (e) {
+        console.error('Import failed:', e);
+        showToast('Failed to import settings', 'error');
+      }
+    }
+
+    // Danger zone functions
+    const btnWipe = document.getElementById('btn-wipe-local');
+    const btnTerminate = document.getElementById('btn-terminate-identity');
+
+    async function triggerShred() {
+      if (!confirm('CRITICAL: This will permanently shred all files and database items with DoD-standard zero-fill. This cannot be undone. Proceed?')) return;
+      
+      try {
+        const res = await fetch('/api/shred-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          showToast('All data successfully shredded. Redirecting to login.', 'success');
+          setTimeout(() => {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+          }, 1000);
+        } else {
+          showToast('Failed to shred data', 'error');
+        }
+      } catch (e) {
+        showToast('Network error during shredding', 'error');
+      }
+    }
+
+    if (btnWipe) btnWipe.onclick = triggerShred;
+    if (btnTerminate) btnTerminate.onclick = triggerShred;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      loadProfile();
+      initializeToggles();
+      initializeSelects();
+
+      // Attach profile form handler
+      const profileForm = document.getElementById('profile-form');
+      if (profileForm) {
+        profileForm.addEventListener('submit', saveProfile);
+      }
+      const profileCancel = document.getElementById('profile-cancel');
+      if (profileCancel) {
+        profileCancel.addEventListener('click', (e) => {
+          e.preventDefault();
+          profileForm.reset();
+          loadProfile();
+        });
+      }
+
+      // Attach password form handler
+      const passwordForm = document.getElementById('password-form');
+      if (passwordForm) {
+        passwordForm.addEventListener('submit', changePassword);
+      }
+      const passwordCancel = document.getElementById('password-cancel');
+      if (passwordCancel) {
+        passwordCancel.addEventListener('click', (e) => {
+          e.preventDefault();
+          passwordForm.reset();
+        });
+      }
+
+      // Add keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+          e.preventDefault();
+          saveSettings();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
