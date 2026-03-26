@@ -318,19 +318,19 @@
           <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
             <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-6">Interface</h3>
             <div class="space-y-4">
-              <div class="p-4 rounded-lg bg-surface-container-lowest border border-primary/20 flex items-center justify-between">
+              <button id="theme-dark" class="w-full p-4 rounded-lg bg-surface-container-lowest border border-primary/20 flex items-center justify-between hover:brightness-110 transition-all">
                 <div class="flex items-center gap-3">
                   <span class="material-symbols-outlined text-primary">dark_mode</span>
                   <span class="text-sm font-medium">Dark Mode</span>
                 </div>
-                <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-              </div>
-              <div class="p-4 rounded-lg bg-surface-container-lowest/30 border border-outline-variant/10 flex items-center justify-between hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+                <span class="material-symbols-outlined text-secondary theme-check" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+              </button>
+              <button id="theme-light" class="w-full p-4 rounded-lg bg-surface-container-lowest/30 border border-outline-variant/10 flex items-center justify-between hover:bg-surface-container-lowest transition-colors cursor-pointer group">
                 <div class="flex items-center gap-3">
                   <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">light_mode</span>
                   <span class="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Light Mode</span>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -509,6 +509,70 @@
               encryptedCountEl.textContent = data.statistics.encrypted_items;
             }
           });
+      }
+    }
+
+    // Apply theme to UI
+    function applyThemeToUI() {
+      const themeDarkBtn = document.getElementById('theme-dark');
+      const themeLightBtn = document.getElementById('theme-light');
+      const darkCheck = themeDarkBtn?.querySelector('.theme-check');
+      
+      if (currentSettings.theme === 'dark') {
+        // Dark mode is selected
+        themeDarkBtn?.classList.add('bg-surface-container-lowest', 'border-primary/20');
+        themeDarkBtn?.classList.remove('bg-surface-container-lowest/30', 'border-outline-variant/10');
+        if (darkCheck) {
+          darkCheck.style.display = 'inline-block';
+        }
+        
+        themeLightBtn?.classList.remove('bg-surface-container-lowest');
+        themeLightBtn?.classList.add('bg-surface-container-lowest/30', 'border-outline-variant/10');
+      } else {
+        // Light mode is selected
+        themeDarkBtn?.classList.remove('bg-surface-container-lowest', 'border-primary/20');
+        themeDarkBtn?.classList.add('bg-surface-container-lowest/30', 'border-outline-variant/10');
+        if (darkCheck) {
+          darkCheck.style.display = 'none';
+        }
+        
+        themeLightBtn?.classList.add('bg-surface-container-lowest');
+        themeLightBtn?.classList.remove('bg-surface-container-lowest/30', 'border-outline-variant/10');
+      }
+    }
+
+    // Change theme
+    async function changeTheme(theme) {
+      try {
+        const settings = { ...currentSettings, theme };
+        
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+
+        const data = await res.json();
+        if (data.status === 'ok') {
+          currentSettings = data.settings;
+          applyThemeToUI();
+          
+          // Apply theme to document
+          if (theme === 'light') {
+            document.documentElement.style.colorScheme = 'light';
+            localStorage.setItem('theme', 'light');
+            showToast('Switched to Light Mode', 'success');
+          } else {
+            document.documentElement.style.colorScheme = 'dark';
+            localStorage.setItem('theme', 'dark');
+            showToast('Switched to Dark Mode', 'success');
+          }
+        } else {
+          showToast(data.error || 'Failed to change theme', 'error');
+        }
+      } catch (e) {
+        console.error('Failed to change theme:', e);
+        showToast('Network error while changing theme', 'error');
       }
     }
 
@@ -753,9 +817,10 @@
     if (btnTerminate) btnTerminate.onclick = triggerShred;
 
     // Initialize on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      loadSettings();
-      loadProfile();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadSettings();
+      await loadProfile();
+      applyThemeToUI();
       initializeToggles();
       initializeSelects();
 
@@ -783,6 +848,22 @@
         passwordCancel.addEventListener('click', (e) => {
           e.preventDefault();
           passwordForm.reset();
+        });
+      }
+
+      // Attach theme buttons
+      const themeDarkBtn = document.getElementById('theme-dark');
+      const themeLightBtn = document.getElementById('theme-light');
+      if (themeDarkBtn) {
+        themeDarkBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          changeTheme('dark');
+        });
+      }
+      if (themeLightBtn) {
+        themeLightBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          changeTheme('light');
         });
       }
 

@@ -180,6 +180,9 @@
     "auto_delete_messages": true,
     "passphrase_lock": false,
     "biometric_auth": true,
-    "updated_at": 1774536248713
+    "updated_at": 1774542541390,
+    "theme": "dark",
+    "language": "en",
+    "notifications_enabled": true
   }
 }
