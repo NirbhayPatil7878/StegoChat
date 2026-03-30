@@ -993,7 +993,7 @@ def main():
     print(f'[StegoChat] URL:                http://{host}:{port}')
     print(f'[StegoChat] Debug mode:         {debug}')
 
-    app.run(host=host, port=port, debug=debug, use_reloader=False)
+    app.run(host="0.0.0.0", port=5000, debug=debug, use_reloader=False)
 
 
 if __name__ == '__main__':

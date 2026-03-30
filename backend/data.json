@@ -165,6 +165,27 @@
       "expiresAt": 1774537911839,
       "expiryHours": 5,
       "used": false
+    },
+    "1f5918b045ab": {
+      "type": "stego_file",
+      "file": "stego_544922.png",
+      "password": "0",
+      "decoy_password": "9",
+      "message": "hi",
+      "createdAt": 1774683968807,
+      "expiresAt": 1775288768807,
+      "used": false
+    },
+    "1d881fc47e90": {
+      "type": "stego_file",
+      "file": "stego_eof_648716.png",
+      "password": "0",
+      "message": "File: screenshot-2026-01-22_15-00-34.png",
+      "createdAt": 1774684064662,
+      "expiresAt": 1775288864662,
+      "expiryHours": 168,
+      "used": true,
+      "retrievedAt": 1774684087843
     }
   },
   "vault_password": "$2b$12$B.KQk8sYIc5Smg3apGwit.Isbc.JjSr1Q.r4qsvtSlQux6DqVwrU6",
@@ -175,12 +196,12 @@
     "updated_at": 1774536235657
   },
   "settings": {
-    "encryption_protocol": "RSA-4096",
-    "embedding_method": "Spread Spectrum",
-    "auto_delete_messages": true,
+    "encryption_protocol": "AES-256",
+    "embedding_method": "LSB",
+    "auto_delete_messages": false,
     "passphrase_lock": false,
     "biometric_auth": true,
-    "updated_at": 1774542541390,
+    "updated_at": 1774684274795,
     "theme": "dark",
     "language": "en",
     "notifications_enabled": true

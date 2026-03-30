@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>StegoChat - Welcome to the Vault</title>
+  <title>Sign In | StegoChat</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&amp;family=Public+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
   <script id="tailwind-config">
     tailwind.config = {
@@ -13,246 +13,515 @@
       theme: {
         extend: {
           colors: {
-            "surface-bright": "#31394d",
-            "tertiary-container": "#8990a8",
-            "on-tertiary-fixed-variant": "#3f465c",
-            "surface-container": "#171f33",
-            "surface-tint": "#c0c1ff",
-            "on-primary-fixed-variant": "#2f2ebe",
-            "primary": "#c0c1ff",
-            "on-surface": "#dae2fd",
-            "outline-variant": "#464554",
-            "on-background": "#dae2fd",
-            "surface-container-low": "#131b2e",
-            "outline": "#908fa0",
-            "background": "#0b1326",
-            "surface-container-lowest": "#060e20",
-            "surface-container-high": "#222a3d",
-            "surface-container-highest": "#2d3449",
-            "surface-variant": "#2d3449",
-            "secondary": "#4ae176",
-            "secondary-container": "#00b954",
-            "error": "#ffb4ab",
+            "surface-container": "#1f1f1f",
+            "on-tertiary-fixed": "#ffffff",
+            "outline": "#919191",
+            "inverse-primary": "#5e5e5e",
+            "tertiary-container": "#919191",
+            "surface-container-lowest": "#0e0e0e",
+            "on-background": "#e2e2e2",
+            "secondary-container": "#474747",
+            "surface-bright": "#393939",
+            "on-secondary-fixed": "#1b1b1b",
+            "surface-dim": "#131313",
+            "primary-container": "#d4d4d4",
+            "outline-variant": "#474747",
+            "on-primary-fixed": "#ffffff",
+            "on-primary": "#1b1b1b",
+            "primary": "#ffffff",
+            "on-secondary-fixed-variant": "#3b3b3b",
+            "tertiary-fixed": "#5e5e5e",
+            "inverse-on-surface": "#303030",
+            "surface-container-highest": "#353535",
+            "on-primary-fixed-variant": "#e2e2e2",
+            "surface-container-high": "#2a2a2a",
+            "on-tertiary-fixed-variant": "#e2e2e2",
             "error-container": "#93000a",
+            "error": "#ffb4ab",
+            "surface": "#131313",
+            "surface-container-low": "#1b1b1b",
+            "secondary-fixed-dim": "#ababab",
+            "secondary-fixed": "#c6c6c6",
+            "on-secondary": "#1b1b1b",
+            "on-surface-variant": "#c6c6c6",
+            "background": "#131313",
+            "secondary": "#c6c6c6",
+            "on-surface": "#e2e2e2",
+            "on-tertiary": "#1b1b1b",
+            "tertiary-fixed-dim": "#474747",
+            "surface-tint": "#c6c6c6",
+            "on-primary-container": "#000000",
+            "inverse-surface": "#e2e2e2",
+            "on-tertiary-container": "#000000",
+            "tertiary": "#e2e2e2",
+            "primary-fixed": "#5e5e5e",
+            "surface-variant": "#353535",
+            "on-secondary-container": "#e2e2e2",
             "on-error-container": "#ffdad6",
-            "on-surface-variant": "#c7c4d7"
+            "primary-fixed-dim": "#474747",
+            "on-error": "#690005"
           },
           fontFamily: {
-            headline: ["Manrope", "sans-serif"],
-            body: ["Inter", "sans-serif"],
-            label: ["Inter", "sans-serif"]
-          }
-        }
+            "headline": ["Lexend", "sans-serif"],
+            "body": ["Public Sans", "sans-serif"],
+            "label": ["Public Sans", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+        },
       }
     };
   </script>
   <style>
-    body {
-      font-family: "Inter", sans-serif;
-      background-color: #0b1326;
-    }
-
     .glass-card {
-      background: rgba(45, 52, 73, 0.4);
+      background: rgba(31, 31, 31, 0.4);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(192, 193, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.08)
+    }
+    .grain-overlay {
+      background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuC2vXFqjCLnukyRI8M1a6VVrGoqHxnBiOs4A-s9l0gtEQK3mBN7CAHW4de57mGdaOyepnEzOOS828qxIGBtvgucD70s4BoAhmzPkdqCp_-0ZTG0mViDe8YOCUJvGYXpQ1pqXOoqUZbXKOrBYSC-yAbYaI8HrvDxOWWfBXWxGc19uwfkRVDjBDoLrG_4t3K8U3j1IZgtle_WXRQwr1afmP3XI840pfED9Xq_qtLzuHeu3tb3NT7OFceTU5crrv_O2sICFihtxAyZ);
+      opacity: 0.03;
+      pointer-events: none
+    }
+    .glow-sphere {
+      background: radial-gradient(circle, rgba(0, 242, 255, 0.05) 0%, rgba(13, 13, 13, 0) 70%)
+    }
+    input:focus {
+      box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.2)
     }
 
-    .text-glow {
-      text-shadow: 0 0 20px rgba(192, 193, 255, 0.4);
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
     }
 
-    .material-symbols-outlined {
-      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    #particle-logo-container {
+      width: 400px;
+      height: 160px;
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    #logo-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .auth-form.hidden {
       display: none;
     }
+
+    body {
+      overflow-y: auto;
+    }
+
+    main {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    @media (max-height: 800px) {
+      main {
+        align-items: flex-start;
+        padding-top: 6rem;
+      }
+    }
   </style>
 </head>
-<body class="bg-background text-on-surface min-h-screen flex items-center justify-center overflow-hidden selection:bg-primary/30">
-  <div class="fixed inset-0 z-0 pointer-events-none">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(192,193,255,0.08)_0%,transparent_50%)]"></div>
-    <div class="absolute inset-0 opacity-20" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuCNWq-qciKJ_ZiWJ6xVUi1arsnn_AUQGTmOC90kVH0q-cMFVKrJT_5szbbzJstkGexTd7rguJcTyNJPUS8w75mtm96HgT6KbggpIqKve1f3tnfraQxPhbSujgkbg66s5lo7poSjsAnottJQEknrfDq6x0o1QOal4cxZg_dpU2S7c3tRzmnY8LPb8-mF7BG7FRPlIxLJqRALE9oNaYDoA9RgmVuqiFrokaH7M0CfBf5zELUL4C7suejsRsHNhfOtw_eeEy7XCkUkIQ');"></div>
-    <div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-[120px]"></div>
-    <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-secondary/5 rounded-full blur-[120px]"></div>
+<body class="bg-surface-container-lowest text-on-surface font-body selection:bg-primary/30 overflow-y-auto flex flex-col">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 max-w-7xl mx-auto left-1/2 -translate-x-1/2 bg-transparent">
+  <div class="flex items-center gap-2">
+    <span class="text-xl font-bold text-gray-100 dark:text-white tracking-tighter font-headline">StegoChat</span>
+  </div>
+  <div class="hidden md:flex items-center gap-8">
+    <a class="text-gray-400 hover:text-gray-200 transition-colors font-headline font-bold text-sm tracking-tight" href="#">Features</a>
+    <a class="text-gray-400 hover:text-gray-200 transition-colors font-headline font-bold text-sm tracking-tight" href="#">Security</a>
+    <a class="text-gray-400 hover:text-gray-200 transition-colors font-headline font-bold text-sm tracking-tight" href="#">About</a>
+  </div>
+  <div>
+    <button id="tab-register-nav" class="font-headline font-bold text-sm tracking-tight text-white border-b-2 border-cyan-400 pb-1 px-1 transition-all hover:border-white">Sign Up</button>
+  </div>
+</nav>
+
+<!-- Background Canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Main Content Area -->
+<main class="relative flex-grow flex items-center justify-center px-4 pt-20 pb-12 z-10 w-full">
+  <!-- Visual Background Elements -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none" id="bg-container">
+    <div class="absolute inset-0 grain-overlay"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] glow-sphere"></div>
   </div>
 
-  <main class="relative z-10 w-full max-w-md px-6 flex flex-col items-center">
-    <div class="mb-12 text-center">
-      <div class="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-2xl bg-gradient-to-tr from-primary to-surface-tint p-[1px] shadow-[0_0_40px_rgba(192,193,255,0.15)]">
-        <div class="w-full h-full bg-surface-container rounded-[15px] flex items-center justify-center">
-          <span class="material-symbols-outlined text-4xl text-primary">shield_lock</span>
-        </div>
-      </div>
-      <h1 class="font-headline text-5xl font-extrabold tracking-tighter text-primary text-glow mb-2">StegoChat</h1>
-      <p class="font-body text-on-surface-variant/80 tracking-wide text-sm uppercase">Hide your message in plain sight</p>
+  <!-- Login/Register Container -->
+  <div class="relative w-full max-w-md z-10 flex flex-col items-center">
+    <!-- Brand Logo Above Card (Reactive Particles) -->
+    <div id="particle-logo-container">
+      <canvas id="logo-canvas"></canvas>
     </div>
+    <p class="text-outline text-sm mb-8 text-center uppercase tracking-[0.2em] font-medium opacity-80">The Digital Vault</p>
 
-    <div class="w-full glass-card rounded-2xl p-8 shadow-[0_40px_40px_rgba(0,0,0,0.4)]">
-      <div class="flex gap-2 p-1 rounded-full bg-surface-container-low mb-6">
-        <button id="tab-login" class="auth-tab flex-1 rounded-full bg-primary text-[#1000a9] py-2 text-sm font-semibold">Login</button>
-        <button id="tab-register" class="auth-tab flex-1 rounded-full text-on-surface-variant py-2 text-sm font-semibold">Register</button>
+    <!-- Login Card -->
+    <div id="login-card" class="glass-card w-full rounded-2xl p-8 md:p-10 shadow-2xl transition-transform duration-200 ease-out">
+      <div class="flex gap-2 p-1 rounded-full bg-surface-container-low mb-6 hidden" id="tab-container">
+        <button id="tab-login-card" class="auth-tab flex-1 rounded-full bg-primary text-[#1000a9] py-2 text-sm font-semibold">Login</button>
+        <button id="tab-register-card" class="auth-tab flex-1 rounded-full text-on-surface-variant py-2 text-sm font-semibold">Register</button>
       </div>
 
-      <form id="login-form" class="auth-form space-y-5">
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form space-y-6">
+        <!-- Input: Email -->
         <div class="space-y-2">
-          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Identity</label>
-          <div class="relative group">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 group-focus-within:text-primary transition-colors">fingerprint</span>
-            <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 pl-12 pr-4 rounded-lg transition-all" id="login-email" placeholder="you@example.com" required type="email">
+          <label class="block text-xs font-medium text-outline uppercase tracking-widest ml-1" for="email">Email Address</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
+            <input class="w-full bg-surface-container/50 border border-outline-variant/30 rounded-xl py-3.5 pl-11 pr-4 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-cyan-500/50 transition-all font-body" id="email" placeholder="name@company.com" type="email" required/>
           </div>
         </div>
-
+        <!-- Input: Password -->
         <div class="space-y-2">
           <div class="flex justify-between items-center px-1">
-            <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase">Access Key</label>
-            <span class="font-label text-[10px] text-on-surface-variant">Demo Vault</span>
+            <label class="block text-xs font-medium text-outline uppercase tracking-widest" for="password">Password</label>
+            <a class="text-xs text-outline hover:text-white transition-colors" href="#">Forgot Password?</a>
           </div>
-          <div class="relative group">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 group-focus-within:text-primary transition-colors">key</span>
-            <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 pl-12 pr-4 rounded-lg transition-all" id="login-password" placeholder="••••••••••••" required type="password">
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
+            <input class="w-full bg-surface-container/50 border border-outline-variant/30 rounded-xl py-3.5 pl-11 pr-4 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-cyan-500/50 transition-all font-body" id="password" placeholder="••••••••" type="password" required/>
           </div>
         </div>
-
-        <div class="flex items-center gap-3 py-2 px-3 bg-secondary/5 rounded-full w-fit">
-          <div class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
-          </div>
-          <span class="text-[11px] font-medium text-secondary/90 tracking-tight">Active Encryption Tunnel Ready</span>
+        <!-- Remember Me -->
+        <div class="flex items-center gap-3 px-1">
+          <input class="w-4 h-4 rounded border-outline-variant bg-surface-container text-cyan-500 focus:ring-cyan-500 focus:ring-offset-surface-container-lowest" id="remember" type="checkbox"/>
+          <label class="text-sm text-on-surface-variant cursor-pointer select-none" for="remember">Remember me for 30 days</label>
         </div>
-
-        <button class="w-full bg-gradient-to-r from-primary to-surface-tint hover:brightness-110 active:scale-[0.98] transition-all py-4 rounded-xl text-[#0d0096] font-headline font-bold text-sm shadow-[0_8px_20px_rgba(192,193,255,0.2)]" type="submit">Enter the Vault</button>
+        <!-- Sign In Button -->
+        <button class="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:opacity-90 text-white font-headline font-bold py-4 rounded-xl shadow-[0_0_15px_rgba(8,145,178,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2" type="submit">
+          Sign In
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </button>
+        <!-- Divider -->
+        <div class="relative py-4">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-outline-variant/30"></div>
+          </div>
+          <div class="relative flex justify-center text-xs uppercase tracking-widest">
+            <span class="bg-surface-container/20 px-4 text-outline backdrop-blur-md">Or continue with</span>
+          </div>
+        </div>
+        <!-- Social Auth -->
+        <div class="grid grid-cols-2 gap-4">
+          <button class="flex items-center justify-center gap-3 bg-surface-container/30 border border-outline-variant/30 hover:bg-surface-container/50 py-3 rounded-xl transition-all" type="button">
+            <img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUSwT2kD8S0KVsgEA5U5piUWPDi5rQEtUBykiQVDx-hAGFIDatQZB7C39ljkkm-0P5tgjdezOQ1WcLkKzV43kGGpT8zCvnzwLi6HAzDW41nqpnuK0NjJaKacME3TUP4ygnjZ_QanQtM3cn1hT8g96bTZWxzMmisSSo5lOXIN_q_KUak7B-A1CNnFSC_wFqZGOE02qubuGg2Lau7hAPlwZRZF163m0RRgC7oD3vB2Y8Z7_pUWsNEomKtG7bTMKBUzhJ7ZF8ltun"/>
+            <span class="text-sm font-medium">Google</span>
+          </button>
+          <button class="flex items-center justify-center gap-3 bg-surface-container/30 border border-outline-variant/30 hover:bg-surface-container/50 py-3 rounded-xl transition-all" type="button">
+            <span class="material-symbols-outlined text-xl">terminal</span>
+            <span class="text-sm font-medium">GitHub</span>
+          </button>
+        </div>
       </form>
 
-      <form id="register-form" class="auth-form hidden space-y-5">
+      <!-- Register Form -->
+      <form id="register-form" class="auth-form hidden space-y-6">
+        <!-- Email -->
         <div class="space-y-2">
-          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Email</label>
-          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-email" placeholder="vault@stegochat.dev" required type="email">
+          <label class="block text-xs font-medium text-outline uppercase tracking-widest ml-1" for="reg-email">Email Address</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
+            <input class="w-full bg-surface-container/50 border border-outline-variant/30 rounded-xl py-3.5 pl-11 pr-4 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-cyan-500/50 transition-all font-body" id="reg-email" placeholder="vault@stegochat.dev" type="email" required/>
+          </div>
         </div>
-
+        <!-- Username -->
         <div class="space-y-2">
-          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Alias</label>
-          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-username" placeholder="ShadowFox" required type="text">
+          <label class="block text-xs font-medium text-outline uppercase tracking-widest ml-1" for="reg-username">Username</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">person</span>
+            <input class="w-full bg-surface-container/50 border border-outline-variant/30 rounded-xl py-3.5 pl-11 pr-4 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-cyan-500/50 transition-all font-body" id="reg-username" placeholder="ShadowFox" type="text" required/>
+          </div>
         </div>
-
+        <!-- Password -->
         <div class="space-y-2">
-          <label class="font-label text-[10px] font-bold text-primary/70 tracking-[0.1em] uppercase block px-1">Vault Key (Real)</label>
-          <input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-password" placeholder="Create a secret key" required type="password">
+          <label class="block text-xs font-medium text-outline uppercase tracking-widest ml-1" for="reg-password">Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
+            <input class="w-full bg-surface-container/50 border border-outline-variant/30 rounded-xl py-3.5 pl-11 pr-4 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-cyan-500/50 transition-all font-body" id="reg-password" placeholder="••••••••" type="password" required/>
+          </div>
         </div>
-
+        <!-- Confirm Password -->
         <div class="space-y-2">
-          <label class="font-label text-[10px] font-bold text-error/70 tracking-[0.1em] uppercase block px-1">Duress Key (Fake)</label>
-          <input class="w-full bg-surface-container-lowest border-0 border-b border-error/30 focus:border-error focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 px-4 rounded-lg transition-all" id="reg-duress" placeholder="Key to show clean vault" required type="password">
+          <label class="block text-xs font-medium text-outline uppercase tracking-widest ml-1" for="reg-confirm-password">Confirm Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
+            <input class="w-full bg-surface-container/50 border border-outline-variant/30 rounded-xl py-3.5 pl-11 pr-4 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-cyan-500/50 transition-all font-body" id="reg-confirm-password" placeholder="••••••••" type="password" required/>
+          </div>
         </div>
-
-        <button class="w-full bg-gradient-to-r from-primary to-surface-tint hover:brightness-110 active:scale-[0.98] transition-all py-4 rounded-xl text-[#0d0096] font-headline font-bold text-sm shadow-[0_8px_20px_rgba(192,193,255,0.2)]" type="submit">Create Identity</button>
+        <!-- Sign Up Button -->
+        <button class="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:opacity-90 text-white font-headline font-bold py-4 rounded-xl shadow-[0_0_15px_rgba(8,145,178,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2" type="submit">
+          Create Account
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </button>
       </form>
     </div>
 
-    <footer class="mt-12 flex flex-col items-center gap-6">
-      <div class="flex items-center gap-8">
-        <div class="flex flex-col items-center">
-          <span class="material-symbols-outlined text-primary/30 text-xl">verified_user</span>
-          <span class="font-label text-[9px] text-on-surface-variant/40 mt-1">E2EE</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="material-symbols-outlined text-primary/30 text-xl">visibility_off</span>
-          <span class="font-label text-[9px] text-on-surface-variant/40 mt-1">HIDDEN</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="material-symbols-outlined text-primary/30 text-xl">memory</span>
-          <span class="font-label text-[9px] text-on-surface-variant/40 mt-1">OBSIDIAN</span>
-        </div>
-      </div>
-      <p class="text-[11px] text-on-surface-variant/60 text-center">Demo only. Accounts remain stored in browser storage for this local prototype.</p>
-    </footer>
-  </main>
+    <!-- Register Footer -->
+    <p id="footer-login" class="text-center mt-8 text-outline text-sm">
+      Don't have an account? 
+      <button onclick="switchToRegister()" class="text-white font-semibold hover:underline decoration-cyan-500 ml-1 border-0 bg-none cursor-pointer p-0">Sign Up</button>
+    </p>
+    <p id="footer-register" class="text-center mt-8 text-outline text-sm hidden">
+      Already have an account? 
+      <button onclick="switchToLogin()" class="text-white font-semibold hover:underline decoration-cyan-500 ml-1 border-0 bg-none cursor-pointer p-0">Sign In</button>
+    </p>
+  </div>
+</main>
 
-  <div class="fixed top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-primary/10 to-transparent pointer-events-none"></div>
-  <div class="fixed top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none"></div>
+<!-- Footer -->
+<footer class="relative w-full py-6 flex flex-col md:flex-row justify-center items-center gap-4 bg-transparent z-10 px-6">
+  <p class="font-['Public_Sans'] text-xs font-normal text-gray-500">© 2024 StegoChat. Encrypted Communication.</p>
+  <div class="flex gap-6">
+    <a class="font-['Public_Sans'] text-xs font-normal text-gray-500 hover:text-gray-300 transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+    <a class="font-['Public_Sans'] text-xs font-normal text-gray-500 hover:text-gray-300 transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+    <a class="font-['Public_Sans'] text-xs font-normal text-gray-500 hover:text-gray-300 transition-colors opacity-80 hover:opacity-100" href="#">Help Center</a>
+  </div>
+</footer>
 
-  <script>
-    const tabLogin = document.getElementById('tab-login');
-    const tabRegister = document.getElementById('tab-register');
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
+<script>
+  const card = document.getElementById('login-card');
+  const bgCanvas = document.getElementById('bg-canvas');
+  const bgCtx = bgCanvas.getContext('2d');
+  const logoCanvas = document.getElementById('logo-canvas');
+  const logoCtx = logoCanvas.getContext('2d', { willReadFrequently: true });
 
-    function activateTab(mode) {
-      const loginActive = mode === 'login';
-      tabLogin.classList.toggle('bg-primary', loginActive);
-      tabLogin.classList.toggle('text-[#1000a9]', loginActive);
-      tabLogin.classList.toggle('text-on-surface-variant', !loginActive);
-      tabRegister.classList.toggle('bg-primary', !loginActive);
-      tabRegister.classList.toggle('text-[#1000a9]', !loginActive);
-      tabRegister.classList.toggle('text-on-surface-variant', loginActive);
-      loginForm.classList.toggle('hidden', !loginActive);
-      registerForm.classList.toggle('hidden', loginActive);
-    }
+  let mouse = { x: -1000, y: -1000, radius: 120 };
+  let bgParticles = [];
+  let logoParticles = [];
+  let width, height;
 
-    tabLogin.onclick = () => activateTab('login');
-    tabRegister.onclick = () => activateTab('register');
-
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('secretsnap_users') || '[]');
-    }
-
-    function saveUsers(users) {
-      localStorage.setItem('secretsnap_users', JSON.stringify(users));
-    }
-
-    registerForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('reg-email').value.trim();
-      const username = document.getElementById('reg-username').value.trim();
-      const pw = document.getElementById('reg-password').value;
-      const duress = document.getElementById('reg-duress').value;
-
-      if (pw === duress) {
-        alert('Duress key must be different from real key');
-        return;
-      }
-      const users = getUsers();
-      if (users.find((user) => user.email === email)) {
-        alert('User already exists');
-        return;
-      }
-      users.push({ email, username, password: pw, duress_password: duress });
-      saveUsers(users);
-      alert('Account created. Enter the vault with your new identity.');
-      activateTab('login');
-    };
-
-    loginForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('login-email').value.trim();
-      const pw = document.getElementById('login-password').value;
-      const users = getUsers();
+  class Particle {
+    constructor(x, y, isStatic = false) {
+      this.x = x;
+      this.y = y;
+      this.baseX = x;
+      this.baseY = y;
+      this.size = isStatic ? Math.random() * 1.5 + 0.8 : Math.random() * 1.5 + 0.5;
+      this.vx = 0;
+      this.vy = 0;
+      this.friction = isStatic ? 0.88 : 0.95;
+      this.isStatic = isStatic;
       
-      const user = users.find((entry) => entry.email === email && entry.password === pw);
-      const duressUser = users.find((entry) => entry.email === email && entry.duress_password === pw);
+      if (isStatic) {
+        const rand = Math.random();
+        this.color = rand > 0.7 ? 'rgba(0, 242, 255, 1)' : 'rgba(255, 255, 255, 1)';
+      } else {
+        this.color = `rgba(255,255,255,${Math.random() * 0.2 + 0.05})`;
+      }
+      
+      this.ease = isStatic ? 0.15 : 0.05;
+    }
 
-      if (duressUser) {
-        // TRIGGER SHREDDER ON DURESS
-        try {
-          await fetch('/api/shred-all', { method: 'POST' });
-        } catch (err) {}
-        duressUser.isDuress = true;
-        sessionStorage.setItem('secretsnap_current_user', JSON.stringify(duressUser));
-        window.location.href = '/chat';
-        return;
+    draw(ctx) {
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    update(mouseX, mouseY, forceRadius) {
+      if (!this.isStatic) {
+        this.x += Math.sin(Date.now() * 0.001 + this.baseX) * 0.15;
+        this.y += Math.cos(Date.now() * 0.001 + this.baseY) * 0.15;
       }
 
-      if (!user) {
-        alert('Invalid credentials');
-        return;
+      let dx = this.baseX - this.x;
+      let dy = this.baseY - this.y;
+      this.vx += dx * this.ease;
+      this.vy += dy * this.ease;
+
+      let mdx = this.x - mouseX;
+      let mdy = this.y - mouseY;
+      let mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+      
+      if (mdist < forceRadius) {
+        let force = (forceRadius - mdist) / forceRadius;
+        let strength = this.isStatic ? 15 : 4;
+        this.vx += (mdx / mdist) * force * strength;
+        this.vy += (mdy / mdist) * force * strength;
       }
-      user.isDuress = false;
-      sessionStorage.setItem('secretsnap_current_user', JSON.stringify(user));
-      window.location.href = '/chat';
-    };
-  </script>
+
+      this.vx *= this.friction;
+      this.vy *= this.friction;
+      this.x += this.vx;
+      this.y += this.vy;
+    }
+  }
+
+  function initBackground() {
+    width = bgCanvas.width = window.innerWidth;
+    height = bgCanvas.height = window.innerHeight;
+    bgParticles = [];
+    const count = Math.floor((width * height) / 5000);
+    for (let i = 0; i < count; i++) {
+      bgParticles.push(new Particle(Math.random() * width, Math.random() * height));
+    }
+  }
+
+  function initLogo() {
+    const scale = window.devicePixelRatio || 1;
+    logoCanvas.width = 400 * scale;
+    logoCanvas.height = 160 * scale;
+    logoCtx.scale(scale, scale);
+
+    logoCtx.fillStyle = 'white';
+    logoCtx.textAlign = 'center';
+    logoCtx.textBaseline = 'middle';
+    
+    logoCtx.font = '42px "Material Symbols Outlined"';
+    logoCtx.fillText('lock_person', 200, 45);
+    
+    logoCtx.font = '900 52px Lexend';
+    logoCtx.fillText('StegoChat', 200, 105);
+
+    const imageData = logoCtx.getImageData(0, 0, logoCanvas.width, logoCanvas.height).data;
+    logoCtx.clearRect(0, 0, logoCanvas.width, logoCanvas.height);
+    logoParticles = [];
+
+    const step = Math.floor(2 * scale);
+    for (let y = 0; y < logoCanvas.height; y += step) {
+      for (let x = 0; x < logoCanvas.width; x += step) {
+        const index = (y * logoCanvas.width + x) * 4;
+        if (imageData[index + 3] > 180) {
+          logoParticles.push(new Particle(x / scale, y / scale, true));
+        }
+      }
+    }
+  }
+
+  function animate() {
+    bgCtx.clearRect(0, 0, width, height);
+    logoCtx.clearRect(0, 0, logoCanvas.width, logoCanvas.height);
+
+    bgParticles.forEach(p => {
+      p.update(mouse.x, mouse.y, mouse.radius);
+      p.draw(bgCtx);
+    });
+
+    const rect = logoCanvas.getBoundingClientRect();
+    const logoMouseX = mouse.x - rect.left;
+    const logoMouseY = mouse.y - rect.top;
+    
+    logoParticles.forEach(p => {
+      if (p.isStatic && Math.random() > 0.98) {
+        p.size = Math.random() * 2.5 + 1;
+      } else if (p.isStatic) {
+        p.size = p.size * 0.95 + 1 * 0.05;
+      }
+      p.update(logoMouseX, logoMouseY, 60);
+      p.draw(logoCtx);
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+
+    if (card) {
+      const crect = card.getBoundingClientRect();
+      const cardCenterX = crect.left + crect.width / 2;
+      const cardCenterY = crect.top + crect.height / 2;
+      const rotateX = (e.clientY - cardCenterY) / 100;
+      const rotateY = (cardCenterX - e.clientX) / 100;
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    }
+  });
+
+  window.addEventListener('mouseleave', () => {
+    mouse.x = -1000;
+    mouse.y = -1000;
+    if (card) card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+  });
+
+  window.addEventListener('resize', () => {
+    initBackground();
+    initLogo();
+  });
+
+  document.fonts.ready.then(() => {
+    initBackground();
+    initLogo();
+    animate();
+  });
+
+  // Tab Switching
+  function switchToLogin() {
+    document.getElementById('login-form').classList.remove('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('footer-login').classList.remove('hidden');
+    document.getElementById('footer-register').classList.add('hidden');
+  }
+
+  function switchToRegister() {
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.remove('hidden');
+    document.getElementById('footer-login').classList.add('hidden');
+    document.getElementById('footer-register').classList.remove('hidden');
+  }
+
+  document.getElementById('tab-register-nav').addEventListener('click', switchToRegister);
+
+  // Form Submissions
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    
+    const users = JSON.parse(localStorage.getItem('secretsnap_users') || '[]');
+    const user = users.find((entry) => entry.email === email && entry.password === password);
+    
+    if (!user) {
+      alert('Invalid credentials');
+      return;
+    }
+    
+    user.isDuress = false;
+    sessionStorage.setItem('secretsnap_current_user', JSON.stringify(user));
+    window.location.href = '/chat';
+  });
+
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('reg-email').value.trim();
+    const username = document.getElementById('reg-username').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('secretsnap_users') || '[]');
+    if (users.find((user) => user.email === email)) {
+      alert('Email already registered');
+      return;
+    }
+
+    users.push({ email, username, password });
+    localStorage.setItem('secretsnap_users', JSON.stringify(users));
+    alert('Account created successfully! Please sign in.');
+    switchToLogin();
+    document.getElementById('login-form').reset();
+  });
+</script>
 </body>
 </html>
