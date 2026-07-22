@@ -1,0 +1,33 @@
+# --- Web framework ---
+fastapi==0.115.*
+uvicorn[standard]==0.32.*
+python-multipart==0.0.*
+
+# --- Data / ORM ---
+sqlalchemy==2.0.*
+pydantic==2.*
+pydantic-settings==2.*
+email-validator==2.*
+
+# --- Auth & crypto ---
+python-jose[cryptography]==3.3.*
+bcrypt==5.*
+pycryptodome==3.23.*
+pyotp==2.9.*
+
+# --- Rate limiting ---
+slowapi==0.1.*
+
+# --- Image processing / steganography ---
+pillow==11.*
+numpy==2.*
+
+# --- PostgreSQL driver (used by docker-compose / production) ---
+psycopg[binary]==3.2.*
+
+# --- Gmail API (OAuth2 email sending) ---
+google-auth>=2.0
+google-auth-oauthlib>=1.0
+google-api-python-client>=2.0
+
+# Test and dev tooling live in requirements-dev.txt.

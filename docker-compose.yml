@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stego}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stego}
+      POSTGRES_DB: ${POSTGRES_DB:-stegochat}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stego}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      STEGOCHAT_ENVIRONMENT: production
+      STEGOCHAT_DEBUG: "false"
+      STEGOCHAT_SECRET_KEY: ${STEGOCHAT_SECRET_KEY:?set a strong secret in .env}
+      STEGOCHAT_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-stego}:${POSTGRES_PASSWORD:-stego}@db:5432/${POSTGRES_DB:-stegochat}
+      STEGOCHAT_CORS_ORIGINS: '["http://localhost:8080","http://localhost"]'
+      STEGOCHAT_UPLOAD_DIR: /data/uploads
+      STEGOCHAT_SAMPLE_DIR: /data/samples
+    volumes:
+      - uploads:/data/uploads
+      - ./sample_images:/data/samples:ro
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+volumes:
+  db_data:
+  uploads:

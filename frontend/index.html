@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/logo-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="StegoChat — hide AES-256 encrypted messages inside ordinary images. Secure steganographic messaging for the paranoid."
+    />
+    <meta name="theme-color" content="#0a0e1a" />
+    <title>StegoChat — Secure Steganographic Messaging</title>
+    <script>
+      // Apply persisted theme before paint to avoid a flash.
+      try {
+        const s = JSON.parse(localStorage.getItem("stego-theme") || "{}");
+        const root = document.documentElement;
+        const theme = s.state?.theme || "dark";
+        const resolved =
+          theme === "system"
+            ? matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : theme;
+        root.classList.toggle("dark", resolved === "dark");
+        root.classList.toggle("light", resolved === "light");
+        if (s.state?.accent) root.setAttribute("data-accent", s.state.accent);
+      } catch (e) {}
+    </script>
+  </head>
+  <body class="noise">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

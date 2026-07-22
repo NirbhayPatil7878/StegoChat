@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>StegoChat - Obsidian Vault Embed</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#31394d",
+            "tertiary-container": "#8990a8",
+            "on-tertiary-fixed-variant": "#3f465c",
+            "surface-container": "#171f33",
+            "surface-tint": "#c0c1ff",
+            "on-primary-fixed-variant": "#2f2ebe",
+            "primary": "#c0c1ff",
+            "on-surface": "#dae2fd",
+            "outline-variant": "#464554",
+            "on-background": "#dae2fd",
+            "surface-container-low": "#131b2e",
+            "outline": "#908fa0",
+            "on-secondary-fixed": "#002109",
+            "error-container": "#93000a",
+            "on-primary": "#1000a9",
+            "background": "#0b1326",
+            "secondary-fixed": "#6bff8f",
+            "surface-container-lowest": "#060e20",
+            "primary-fixed": "#e1e0ff",
+            "surface-dim": "#0b1326",
+            "surface-container-highest": "#2d3449",
+            "on-tertiary-container": "#22293d",
+            "tertiary": "#bec6e0",
+            "on-primary-container": "#0d0096",
+            "primary-container": "#8083ff",
+            "on-error-container": "#ffdad6",
+            "on-tertiary": "#283044",
+            "primary-fixed-dim": "#c0c1ff",
+            "on-secondary": "#003915",
+            "tertiary-fixed-dim": "#bec6e0",
+            "inverse-primary": "#494bd6",
+            "inverse-on-surface": "#283044",
+            "on-secondary-container": "#004119",
+            "secondary": "#4ae176",
+            "surface": "#0b1326",
+            "on-tertiary-fixed": "#131b2e",
+            "on-surface-variant": "#c7c4d7",
+            "surface-container-high": "#222a3d",
+            "inverse-surface": "#dae2fd",
+            "surface-variant": "#2d3449",
+            "secondary-fixed-dim": "#4ae176",
+            "on-secondary-fixed-variant": "#005321",
+            "tertiary-fixed": "#dae2fd",
+            "secondary-container": "#00b954",
+            "on-error": "#690005",
+            "on-primary-fixed": "#07006c",
+            "error": "#ffb4ab"
+          },
+          fontFamily: {
+            headline: ["Manrope", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+
+    .glass-card {
+      background: rgba(45, 52, 73, 0.6);
+      backdrop-filter: blur(20px);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #464554;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex">
+  <aside class="fixed left-0 h-screen w-64 bg-[#0b1326] flex-col py-8 px-4 border-r border-[#c0c1ff]/15 z-[60] hidden md:flex">
+    <div class="mb-10 px-2 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-[0_0_20px_rgba(192,193,255,0.2)]">
+        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">security</span>
+      </div>
+      <div>
+        <h1 class="text-[#c0c1ff] font-black tracking-tighter text-xl leading-none">StegoChat</h1>
+        <p class="text-[0.65rem] text-secondary font-bold uppercase tracking-[0.2em] mt-1">Obsidian Vault</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 space-y-2">
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] transition-all ease-in-out duration-200 group" href="/chat">
+        <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">chat_bubble</span>
+        <span class="text-sm tracking-wide">Messages</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff] bg-[#c0c1ff]/10 rounded-lg border-l-2 border-[#4ae176] transition-all ease-in-out duration-200" href="/embed.html">
+        <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">layers</span>
+        <span class="text-sm tracking-wide">Embed</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] transition-all ease-in-out duration-200 group" href="/extract.html">
+        <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">visibility_off</span>
+        <span class="text-sm tracking-wide">Extract</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-3 text-[#c0c1ff]/50 hover:bg-[#c0c1ff]/5 hover:text-[#c0c1ff] transition-all ease-in-out duration-200 group" href="/settings">
+        <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">tune</span>
+        <span class="text-sm tracking-wide">Settings</span>
+      </a>
+    </nav>
+
+    <div class="mt-auto pt-8 border-t border-[#c0c1ff]/5 space-y-2">
+      <div class="flex items-center gap-3 px-4 py-4 mb-4 rounded-xl bg-surface-container-lowest/50">
+        <div class="relative">
+          <img alt="StegoChat Vault Identity" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrolcC39XcmpNsnhITb9fyGEkabjXJwyOkEGb6eT8r9FRfcndeWfMGuaH8H_3Zf1nE1vFuguKmFa4tf_re7WpQE8iH-eDEFMdtlwb_u_QkSpKQusAuYjSChpIdBLHPv38Kv_9ye29xn8s6q1T4ks0sLGiBZhTUOrZBq5OB6aj-sjALYVfGhdlyOzpOsg8a2L1N73KmVHkbUDvfLx-c6l1f-EBO3tdOKRYnKTeddEl8DiZzcY-TCrqZJaKb0f1iM5OT7sgECHcFRA">
+          <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-secondary rounded-full border-2 border-surface animate-pulse"></div>
+        </div>
+        <div class="overflow-hidden">
+          <p class="text-[#c0c1ff] font-bold text-sm truncate">The Obsidian Vault</p>
+          <p class="text-[10px] text-secondary font-medium tracking-tight">Secure Tunnel Active</p>
+        </div>
+      </div>
+      <a class="flex items-center gap-3 px-4 py-2 text-[#c0c1ff]/50 hover:text-[#c0c1ff] transition-colors" href="#">
+        <span class="material-symbols-outlined text-lg">help_outline</span>
+        <span class="text-xs">Help</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2 text-error/70 hover:text-error transition-colors" href="/">
+        <span class="material-symbols-outlined text-lg">logout</span>
+        <span class="text-xs">Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="flex-1 md:ml-64 flex flex-col min-h-screen">
+    <header class="sticky top-0 z-50 bg-[#0b1326]/60 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 shadow-[0_40px_40px_rgba(192,193,255,0.06)]">
+      <div class="flex items-center gap-4">
+        <span class="md:hidden material-symbols-outlined text-[#c0c1ff]">menu</span>
+        <h2 class="tracking-tight text-[#c0c1ff] font-bold text-lg hidden md:block">Embed New Data</h2>
+        <h2 class="tracking-tighter text-[#c0c1ff] font-bold text-xl md:hidden">StegoChat</h2>
+      </div>
+      <div class="flex items-center gap-6">
+        <div class="hidden lg:flex items-center bg-[#1a2333]/30 backdrop-blur-md rounded-full px-4 py-1.5 border border-[#c0c1ff]/10">
+          <span class="material-symbols-outlined text-[#c0c1ff]/40 text-lg">search</span>
+          <input class="bg-transparent border-none focus:ring-0 text-sm text-[#c0c1ff] w-48 placeholder-[#c0c1ff]/30" placeholder="Search archives..." type="text">
+        </div>
+        <div class="flex items-center gap-4">
+          <button class="text-[#c0c1ff]/60 hover:text-[#4ae176] transition-colors duration-300 active:scale-95">
+            <span class="material-symbols-outlined">notifications</span>
+          </button>
+          <button class="text-[#c0c1ff]/60 hover:text-[#4ae176] transition-colors duration-300 active:scale-95">
+            <span class="material-symbols-outlined">shield_lock</span>
+          </button>
+          <button class="text-[#c0c1ff]/60 hover:text-[#4ae176] transition-colors duration-300 active:scale-95">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex-1 p-6 md:p-12 max-w-5xl mx-auto w-full">
+      <section class="mb-12">
+        <h3 class="text-3xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-2">Shadow Embedding</h3>
+        <p class="text-on-surface-variant max-w-xl leading-relaxed">Infuse confidential data into digital media. Your secret remains mathematically invisible to traditional forensic scans.</p>
+      </section>
+
+      <!-- TWO-COLUMN LAYOUT: Standard Embed + Dead Drop -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+        <!-- COLUMN 1: Standard Embedding -->
+        <div class="space-y-6">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1;">data_object</span>
+            <h3 class="text-xl font-bold">Standard Embed</h3>
+          </div>
+
+          <div class="group relative bg-surface-container-low rounded-3xl p-8 border-2 border-dashed border-primary/20 hover:border-primary/60 transition-all duration-500 cursor-pointer overflow-hidden">
+            <input id="cover-input" class="absolute inset-0 opacity-0 cursor-pointer z-10" type="file" />
+            <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+            <div class="flex flex-col items-center justify-center text-center py-10" id="cover-preview-container">
+              <div class="w-20 h-20 rounded-2xl bg-surface-container-high flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-xl border border-outline-variant/20">
+                <span id="cover-icon" class="material-symbols-outlined text-4xl text-primary" style="font-variation-settings:'wght' 300;">cloud_upload</span>
+                <img id="cover-preview" class="hidden w-full h-full object-cover rounded-2xl" src="" />
+              </div>
+              <h4 class="text-xl font-bold mb-2">Cover File</h4>
+              <p id="cover-filename" class="text-on-surface-variant text-sm max-w-xs mb-8">Drag and drop an image...</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <label class="block text-sm font-bold tracking-wide text-on-surface-variant ml-1 uppercase text-[10px]">Secret Payload</label>
+            <div class="relative bg-surface-container-low rounded-2xl border-2 border-dashed border-primary/20 p-6 flex flex-col items-center justify-center cursor-pointer group">
+              <input id="payload-input" class="absolute inset-0 opacity-0 cursor-pointer z-10" type="file" />
+              <span class="material-symbols-outlined text-primary mb-2">attachment</span>
+              <p id="payload-filename" class="text-sm text-on-surface-variant">Click or drop...</p>
+            </div>
+          </div>
+           
+          <div class="space-y-3">
+            <label class="block text-sm font-bold tracking-wide text-on-surface-variant ml-1 uppercase text-[10px]">Vault Access Key</label>
+            <input id="stego-password" type="password" class="w-full bg-surface-container-lowest border border-outline-variant/15 rounded-2xl p-4 text-on-surface focus:ring-primary focus:border-primary" placeholder="Enter password..." />
+          </div>
+
+          <button id="btn-embed" class="w-full bg-gradient-to-r from-primary to-primary-container py-5 rounded-2xl flex items-center justify-center gap-3 group active:scale-[0.98] transition-all duration-200 shadow-[0_10px_30px_rgba(128,131,255,0.25)]">
+            <span class="material-symbols-outlined text-on-primary-container group-hover:rotate-12 transition-transform">auto_fix_high</span>
+            <span class="font-extrabold text-on-primary-container text-lg tracking-tight">Embed Now</span>
+          </button>
+          
+          <div id="result-container" class="hidden glass-card rounded-3xl p-6 border border-primary/20">
+            <p class="text-xs font-bold text-primary mb-3 uppercase">✓ Complete</p>
+            <a id="download-link" href="#" download class="text-sm font-bold text-secondary hover:underline flex items-center gap-2">
+              <span class="material-symbols-outlined">download</span>
+              Download Stego File
+            </a>
+          </div>
+        </div>
+
+        <!-- COLUMN 2: Dead Drop Feature -->
+        <div class="space-y-6">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-symbols-outlined text-secondary text-2xl" style="font-variation-settings:'FILL' 1;">key</span>
+            <h3 class="text-xl font-bold">Dead Drop Token</h3>
+          </div>
+
+          <div class="glass-card rounded-3xl p-6 border border-secondary/20 space-y-4">
+            <div class="bg-secondary-container/20 border border-secondary/30 rounded-2xl p-4">
+              <p class="text-sm font-bold text-secondary mb-2">🔐 Secure Sharing</p>
+              <p class="text-xs text-on-surface-variant leading-relaxed">Share files using tokens. No direct transfer needed!</p>
+            </div>
+
+            <div class="space-y-2 text-xs text-on-surface-variant">
+              <div class="flex gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span>One-time use only</span>
+              </div>
+              <div class="flex gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span id="expiry-text">Expires after 7 days</span>
+              </div>
+              <div class="flex gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                <span>Password included</span>
+              </div>
+            </div>
+
+            <!-- Token Expiration Time Selection -->
+            <div class="mt-4 pt-4 border-t border-secondary/20">
+              <label class="block text-xs font-bold text-secondary uppercase mb-2">Token Expires In</label>
+              <div class="flex gap-2 flex-wrap">
+                <button id="time-1h" class="px-2 py-1 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-secondary text-xs font-bold transition-colors">1h</button>
+                <button id="time-6h" class="px-2 py-1 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-secondary text-xs font-bold transition-colors">6h</button>
+                <button id="time-24h" class="px-2 py-1 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-secondary text-xs font-bold transition-colors">24h</button>
+                <button id="time-7d" class="px-2 py-1 rounded-lg bg-secondary/30 text-secondary text-xs font-bold transition-colors ring-1 ring-secondary">7d</button>
+              </div>
+              <div class="mt-2 flex gap-2">
+                <input id="custom-hours" type="number" min="1" max="8760" placeholder="Custom hours" class="flex-1 bg-surface-container-lowest border border-outline-variant/15 rounded-lg p-2 text-xs text-on-surface focus:ring-secondary focus:border-secondary" />
+                <button id="set-custom-time" class="px-3 py-2 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-secondary text-xs font-bold">Set</button>
+              </div>
+            </div>
+
+            <div id="dead-drop-info" class="hidden mt-4 pt-4 border-t border-secondary/20 space-y-3">
+              <p class="text-xs font-bold text-secondary uppercase">Your Dead Drop Token</p>
+              <div class="bg-surface-container-lowest rounded-lg p-3">
+                <code id="dead-drop-token-display" class="text-xs font-mono text-secondary break-all"></code>
+              </div>
+              <div class="flex gap-2">
+                <button id="copy-dead-drop-btn" class="flex-1 px-3 py-2 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-secondary text-xs font-bold">
+                  📋 Copy
+                </button>
+                <button id="share-dead-drop-btn" class="flex-1 px-3 py-2 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-secondary text-xs font-bold">
+                  🔗 Share
+                </button>
+              </div>
+            </div>
+
+            <div id="dead-drop-empty" class="text-center py-6">
+              <p class="text-[11px] text-on-surface-variant">💡 Embed to generate token</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <script>
+    const coverInput = document.getElementById('cover-input');
+    const payloadInput = document.getElementById('payload-input');
+    const btnEmbed = document.getElementById('btn-embed');
+    const passwordInput = document.getElementById('stego-password');
+    const resultContainer = document.getElementById('result-container');
+    const downloadLink = document.getElementById('download-link');
+
+    // Dead Drop time selection
+    let selectedExpiryHours = 7 * 24; // Default: 7 days
+    const expiryText = document.getElementById('expiry-text');
+    const customHoursInput = document.getElementById('custom-hours');
+    const setCustomTimeBtn = document.getElementById('set-custom-time');
+
+    function updateExpiryText(hours) {
+      if (hours < 24) {
+        expiryText.textContent = `Expires after ${hours} hour${hours > 1 ? 's' : ''}`;
+      } else if (hours === 24) {
+        expiryText.textContent = 'Expires after 1 day';
+      } else if (hours < 24 * 7) {
+        const days = Math.floor(hours / 24);
+        expiryText.textContent = `Expires after ${days} day${days > 1 ? 's' : ''}`;
+      } else {
+        const weeks = Math.floor(hours / (24 * 7));
+        expiryText.textContent = `Expires after ${weeks} week${weeks > 1 ? 's' : ''}`;
+      }
+    }
+
+    // Quick time buttons
+    document.getElementById('time-1h').addEventListener('click', () => {
+      selectedExpiryHours = 1;
+      updateExpiryText(1);
+      updateTimeButtons();
+    });
+    document.getElementById('time-6h').addEventListener('click', () => {
+      selectedExpiryHours = 6;
+      updateExpiryText(6);
+      updateTimeButtons();
+    });
+    document.getElementById('time-24h').addEventListener('click', () => {
+      selectedExpiryHours = 24;
+      updateExpiryText(24);
+      updateTimeButtons();
+    });
+    document.getElementById('time-7d').addEventListener('click', () => {
+      selectedExpiryHours = 7 * 24;
+      updateExpiryText(7 * 24);
+      updateTimeButtons();
+    });
+
+    // Custom time button
+    setCustomTimeBtn.addEventListener('click', () => {
+      const hours = parseInt(customHoursInput.value);
+      if (hours && hours > 0 && hours <= 8760) {
+        selectedExpiryHours = hours;
+        updateExpiryText(hours);
+        updateTimeButtons();
+        customHoursInput.value = '';
+      } else {
+        alert('Please enter a valid number of hours (1-8760)');
+      }
+    });
+
+    // Allow Enter key in custom input
+    customHoursInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') setCustomTimeBtn.click();
+    });
+
+    function updateTimeButtons() {
+      const buttons = ['time-1h', 'time-6h', 'time-24h', 'time-7d'];
+      buttons.forEach(id => {
+        const btn = document.getElementById(id);
+        if ((id === 'time-1h' && selectedExpiryHours === 1) ||
+            (id === 'time-6h' && selectedExpiryHours === 6) ||
+            (id === 'time-24h' && selectedExpiryHours === 24) ||
+            (id === 'time-7d' && selectedExpiryHours === 7 * 24)) {
+          btn.classList.add('ring-1', 'ring-secondary', 'bg-secondary/30');
+          btn.classList.remove('bg-secondary/20');
+        } else {
+          btn.classList.remove('ring-1', 'ring-secondary', 'bg-secondary/30');
+          btn.classList.add('bg-secondary/20');
+        }
+      });
+    }
+
+    coverInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('cover-filename').textContent = file.name;
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (re) => {
+             const img = document.getElementById('cover-preview');
+             img.src = re.target.result;
+             img.classList.remove('hidden');
+             document.getElementById('cover-icon').classList.add('hidden');
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+
+    payloadInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('payload-filename').textContent = file.name;
+      }
+    });
+
+    btnEmbed.addEventListener('click', async () => {
+      const cover = coverInput.files[0];
+      const payload = payloadInput.files[0];
+      const password = passwordInput.value;
+
+      if (!cover || !payload || !password) {
+        alert('Please provide cover file, payload file, and password.');
+        return;
+      }
+
+      btnEmbed.disabled = true;
+      btnEmbed.innerHTML = '<span>Processing...</span>';
+
+      const fd = new FormData();
+      fd.append('cover', cover);
+      fd.append('payload', payload);
+      fd.append('password', password);
+      fd.append('expiryHours', selectedExpiryHours);
+
+      try {
+        const res = await fetch('/api/eof-embed', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          resultContainer.classList.remove('hidden');
+          downloadLink.href = data.stego_url;
+          
+          // Display token in Dead Drop section
+          if (data.token) {
+            const deadDropInfo = document.getElementById('dead-drop-info');
+            const deadDropEmpty = document.getElementById('dead-drop-empty');
+            const deadDropDisplay = document.getElementById('dead-drop-token-display');
+            const copyDeadDropBtn = document.getElementById('copy-dead-drop-btn');
+            const shareDeadDropBtn = document.getElementById('share-dead-drop-btn');
+            
+            // Show token, hide empty state
+            deadDropInfo.classList.remove('hidden');
+            if (deadDropEmpty) deadDropEmpty.classList.add('hidden');
+            deadDropDisplay.textContent = data.token;
+            
+            // Copy button
+            copyDeadDropBtn.onclick = () => {
+              navigator.clipboard.writeText(data.token).then(() => {
+                copyDeadDropBtn.textContent = '✓ Copied!';
+                setTimeout(() => {
+                  copyDeadDropBtn.textContent = '📋 Copy';
+                }, 2000);
+              });
+            };
+            
+            // Share button
+            shareDeadDropBtn.onclick = () => {
+              const text = `Dead Drop Token: ${data.token}`;
+              if (navigator.share) {
+                navigator.share({ title: 'StegoChat Dead Drop', text: text });
+              } else {
+                navigator.clipboard.writeText(text);
+                alert('Token copied! Share with: ' + text);
+              }
+            };
+          }
+          
+          alert('✓ Embedding complete! Your Dead Drop token is ready.');
+        } else {
+          alert('Error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Network error');
+      } finally {
+        btnEmbed.disabled = false;
+        btnEmbed.innerHTML = '<span class="material-symbols-outlined text-on-primary-container group-hover:rotate-12 transition-transform">auto_fix_high</span><span class="font-extrabold text-on-primary-container text-lg tracking-tight">Embed Now</span>';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Code owners for StegoChat. Replace @OWNER with the GitHub org/team or user
+# that should review changes. Paths are matched last-to-first.
+
+*                 @OWNER
+
+# Security-critical areas warrant explicit review.
+/backend/app/core/        @OWNER
+/backend/app/routers/auth.py  @OWNER
+/.github/workflows/       @OWNER

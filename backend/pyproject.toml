@@ -1,0 +1,56 @@
+[project]
+name = "stegochat-backend"
+version = "2.0.0"
+description = "StegoChat API — secure steganographic messaging."
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # comprehensions
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "B008",   # function calls in argument defaults (FastAPI Depends/File/Form)
+    "E501",   # line length handled by the formatter
+    "UP042",  # keep `str, Enum` bases; StrEnum changes DB-stored enum semantics
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+exclude = ["alembic/"]
+
+# numpy 2.x ships PEP 695 `type` statements in its stubs, which mypy only parses
+# under --python-version >=3.12. Skip following them so type-checking stays
+# pinned to our 3.11 baseline without choking on a third-party stub.
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q --disable-warnings"
+# Make the `app` package importable when invoked as bare `pytest` (CI), not just
+# `python -m pytest` (which happens to add the CWD to sys.path).
+pythonpath = ["."]
