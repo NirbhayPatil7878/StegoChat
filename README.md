@@ -6,7 +6,12 @@
 
 **Hide AES-256 encrypted messages inside ordinary images.**
 
-Secure steganographic messaging — a production-grade rebuild with FastAPI, React, and real cryptography.
+Secure steganographic messaging built with FastAPI, React, and real cryptography.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Node](https://img.shields.io/badge/Node-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 
 </div>
 
@@ -14,104 +19,74 @@ Secure steganographic messaging — a production-grade rebuild with FastAPI, Rea
 
 ## What it does
 
-StegoChat lets you **encrypt a message and weave it into an image's pixels**, so the result looks completely ordinary but only the password can reveal what's inside.
+StegoChat lets you **encrypt a message and hide it inside an image's pixels** — the result looks completely ordinary, but only the correct password can reveal what's inside.
 
-- 🔐 **Real crypto** — AES-256-GCM (authenticated) with PBKDF2 key derivation, a random salt and IV per message. Wrong passwords are *rejected*, never silently decrypted to garbage.
-- 🖼️ **LSB steganography** — ciphertext is scattered across pixels in a password-seeded pseudo-random order, so the payload is both hidden and statistically hard to detect.
-- 🕵️ **Decoy messages** — embed a second message under a *different* password. Hand over the harmless one under duress.
-- ⏱️ **Dead drops** — share self-destructing, one-time-read links that burn on open or expire on a timer.
-- 📎 **Universal file hiding** — conceal *any* file inside *any* carrier (image, video, audio, PDF, zip…); the carrier still opens normally.
-- 🧩 **Multi-image split** — spread one message across several images and reassemble from any order (beats any single image's capacity limit).
-- 🔗 **QR share links** — every share link comes with a scannable, downloadable QR, generated entirely client-side.
-- 🔬 **Forensic analyzer** — scan any image for entropy anomalies and hidden-data fingerprints.
-- 👤 **Full auth** — JWT access + rotating refresh tokens, bcrypt hashing, **TOTP two-factor auth** (with recovery codes), and breached-password rejection (HaveIBeenPwned k-anonymity).
-- 🎨 **Premium UI** — React + Tailwind + Framer Motion, glassmorphism, dark/light themes, 5 accent colors, fully responsive.
-
-## Tech stack
-
-| Layer     | Choice |
-|-----------|--------|
-| Frontend  | React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, React Query, Zustand, React Router, Recharts |
-| Backend   | FastAPI, SQLAlchemy 2, Pydantic v2, slowapi (rate limiting) |
-| Crypto    | PyCryptodome (AES-256-GCM, PBKDF2), bcrypt, python-jose (JWT) |
-| Imaging   | Pillow, NumPy |
-| Database  | SQLite by default · PostgreSQL in production (one env var) |
-| Infra     | Docker + docker-compose, nginx |
+| Feature | Description |
+|---|---|
+| 🔐 **Real crypto** | AES-256-GCM with PBKDF2 key derivation, random salt + IV per message. Wrong passwords are rejected cleanly, never silently misread. |
+| 🖼️ **LSB steganography** | Ciphertext is scattered across pixels in a password-seeded random order — hidden and statistically hard to detect. |
+| 🕵️ **Decoy messages** | Embed a second innocent message under a different password. Hand it over under duress. |
+| ⏱️ **Dead drops** | Self-destructing one-time links that burn on open or expire on a timer. |
+| 📎 **Universal file hiding** | Conceal any file inside any carrier — image, video, audio, PDF, zip. The carrier still opens normally. |
+| 🧩 **Multi-image split** | Spread one message across several images; reassemble in any order. Bypasses single-image capacity limits. |
+| 🔗 **QR share links** | Every share link includes a scannable, downloadable QR code — generated entirely client-side. |
+| 🔬 **Forensic analyzer** | Scan any image for entropy anomalies and hidden-data fingerprints. |
+| 👤 **Full auth** | JWT + rotating refresh tokens, bcrypt, TOTP 2FA with recovery codes, and breached-password rejection via HaveIBeenPwned. |
+| 🎨 **Premium UI** | React + Tailwind + Framer Motion, glassmorphism, dark/light themes, 5 accent colors, fully responsive. |
 
 ---
 
-## Quick start (local dev)
+## Tech stack
 
-**Prerequisites:** Python 3.11+, Node 18+.
+| Layer | Choice |
+|---|---|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, React Query, Zustand, Recharts |
+| **Backend** | FastAPI, SQLAlchemy 2, Pydantic v2, slowapi |
+| **Crypto** | PyCryptodome (AES-256-GCM, PBKDF2), bcrypt, python-jose (JWT) |
+| **Imaging** | Pillow, NumPy |
+| **Database** | SQLite (dev) · PostgreSQL (production, one env var) |
+| **Infra** | Docker, docker-compose, nginx |
 
-### 1. Backend
+---
 
+## Quick start
+
+### Option A — Local dev
+
+**Prerequisites:** Python 3.11+, Node 18+
+
+**1. Backend**
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate   # or use the repo's ../venv
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
+API: `http://localhost:8000` · Docs: `http://localhost:8000/api/docs`
+SQLite database is created automatically — no database server needed.
 
-The API is now at `http://localhost:8000` — interactive docs at **http://localhost:8000/api/docs**.
-It creates a local `stegochat.db` SQLite file automatically. No database server needed.
-
-### 2. Frontend
-
+**2. Frontend**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Open **http://localhost:5173**. The dev server proxies `/api` to the backend automatically.
+App: `http://localhost:5173` · The dev server proxies `/api` to the backend automatically.
 
 ---
 
-## Quick start (Docker — one command)
+### Option B — Docker (one command)
 
 ```bash
-cp .env.example .env          # then edit STEGOCHAT_SECRET_KEY
+cp .env.example .env    # set STEGOCHAT_SECRET_KEY
 docker compose up --build
 ```
 
-- Web UI: **http://localhost:8080**
-- Runs Postgres + FastAPI + nginx-served frontend together.
+App: `http://localhost:8080` — runs Postgres + FastAPI + nginx-served frontend together.
 
-Generate a strong secret:
+Generate a strong secret key:
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(48))"
-```
-
----
-
-## Project structure
-
-```
-StegoChat/
-├── backend/                # FastAPI application
-│   ├── app/
-│   │   ├── main.py         # app wiring, middleware, security headers
-│   │   ├── config.py       # env-driven settings (pydantic-settings)
-│   │   ├── database.py     # SQLAlchemy engine + session
-│   │   ├── core/           # crypto, security(JWT), stego, eof, forensics, deps
-│   │   ├── models/         # ORM: User, Chat, Message, Setting, ActivityLog, ...
-│   │   ├── schemas/        # Pydantic request/response models
-│   │   ├── routers/        # auth, users, stego, history, dashboard, dead_drop, files
-│   │   └── services/       # activity logging, storage helpers
-│   ├── tests/              # pytest suite (crypto, stego, auth, API)
-│   └── requirements.txt
-├── frontend/               # React + Vite + TS
-│   └── src/
-│       ├── api/            # axios client (+ refresh rotation), typed services
-│       ├── store/          # Zustand: auth, theme
-│       ├── components/     # ui/ + layout/
-│       ├── pages/          # Landing, Dashboard, Chat, Studio, History, Forensics, static/, ...
-│       └── styles/         # design-system CSS (theme tokens)
-├── sample_images/          # built-in cover images
-├── uploads/                # generated stego files (gitignored)
-├── docker-compose.yml
-└── docs/                   # architecture, API, deployment guides
 ```
 
 ---
@@ -119,44 +94,81 @@ StegoChat/
 ## How the crypto works
 
 ```
-plaintext ──PBKDF2(pw, salt, 200k)──▶ AES-256-GCM(key, nonce) ──▶ ciphertext+tag
-                                                                       │
-   envelope = MAGIC | VERSION | SALT(16) | NONCE(12) | TAG(16) | CIPHERTEXT
-                                                                       │
-                                    base64 ──▶ bits ──▶ scattered into pixel LSBs
-                                             (password-seeded permutation)
+plaintext ──PBKDF2(pw, salt, 200k iters)──▶ AES-256-GCM(key, nonce) ──▶ ciphertext + tag
+                                                                                │
+              envelope = MAGIC | VERSION | SALT(16) | NONCE(12) | TAG(16) | CIPHERTEXT
+                                                                                │
+                                         base64 ──▶ bits ──▶ scattered into pixel LSBs
+                                                         (password-seeded permutation)
 ```
 
-- The **GCM tag** authenticates the data: a wrong password or any tampering fails cleanly.
-- The **real** payload lives in the blue channel; the optional **decoy** lives in the red channel under its own password.
-- Output is always **PNG** — JPEG recompression would destroy the hidden bits.
+- The **GCM authentication tag** ensures a wrong password or any bit-flip fails loudly — never silently.
+- The **real** payload is encoded in the blue channel; an optional **decoy** lives in the red channel under its own independent password.
+- Output is always **PNG** — JPEG recompression would destroy the LSB payload.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design and [`docs/API.md`](docs/API.md) for the endpoint reference.
+Full design: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · API reference: [`docs/API.md`](docs/API.md)
+
+---
+
+## Project structure
+
+```
+StegoChat/
+├── backend/
+│   ├── app/
+│   │   ├── main.py         # app wiring, middleware, security headers
+│   │   ├── config.py       # env-driven settings (pydantic-settings)
+│   │   ├── database.py     # SQLAlchemy engine + session
+│   │   ├── core/           # crypto, JWT, stego, EOF hiding, forensics, deps
+│   │   ├── models/         # ORM: User, Chat, Message, Setting, ActivityLog
+│   │   ├── schemas/        # Pydantic request/response models
+│   │   ├── routers/        # auth, users, stego, history, dashboard, dead_drop, files
+│   │   └── services/       # activity logging, storage helpers
+│   ├── tests/              # pytest suite: crypto, stego, auth, API
+│   └── requirements.txt
+├── frontend/
+│   └── src/
+│       ├── api/            # axios client with refresh rotation, typed services
+│       ├── store/          # Zustand: auth, theme
+│       ├── components/     # ui/ + layout/
+│       ├── pages/          # Landing, Dashboard, Chat, Studio, History, Forensics
+│       └── styles/         # design-system CSS (theme tokens)
+├── sample_images/          # built-in cover images
+├── uploads/                # generated stego files (gitignored)
+├── docker-compose.yml
+└── docs/                   # architecture, API, and deployment guides
+```
 
 ---
 
 ## Testing
 
 ```bash
+# Backend — crypto, steganography, auth, and API integration tests
 cd backend
 pip install pytest httpx
-pytest            # crypto, steganography, auth, and API integration tests
-```
+pytest
 
-```bash
+# Frontend — TypeScript type check + production build
 cd frontend
-npm run build     # type-checks (tsc) and production-builds
+npm run build
 ```
 
 ---
 
 ## Security notes
 
-- Passwords are **never stored** — they only derive keys in-memory per request.
-- Message history persists **ciphertext only**, never plaintext.
-- Refresh tokens are stored as SHA-256 hashes and **rotated** on every use.
-- Rate limiting, strict upload validation (type/size), and security headers are enabled by default.
+- Passwords are **never stored** — they derive keys in-memory per request only.
+- Message history stores **ciphertext only** — plaintext never touches the database.
+- Refresh tokens are stored as **SHA-256 hashes** and rotated on every use.
+- Rate limiting, strict file upload validation, and security headers are on by default.
 - **Always** set a strong `STEGOCHAT_SECRET_KEY` in production.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Found a vulnerability? Check [SECURITY.md](SECURITY.md).
 
 ## License
 
