@@ -9,7 +9,6 @@ Priority:
 from __future__ import annotations
 
 import base64
-import json
 import logging
 import smtplib
 import ssl
@@ -25,11 +24,10 @@ logger = logging.getLogger("stegochat.mail")
 # Transport selection
 # ---------------------------------------------------------------------------
 
+
 def _gmail_api_configured() -> bool:
     return bool(
-        settings.gmail_client_id
-        and settings.gmail_client_secret
-        and settings.gmail_refresh_token
+        settings.gmail_client_id and settings.gmail_client_secret and settings.gmail_refresh_token
     )
 
 
@@ -54,7 +52,6 @@ def _send_via_gmail_api(msg: MIMEMultipart) -> bool:
         from google.auth.transport.requests import Request as GoogleRequest
         from google.oauth2.credentials import Credentials
         from googleapiclient.discovery import build
-        from googleapiclient.errors import HttpError
     except ImportError:
         logger.error(
             "google-auth / google-api-python-client not installed. "
@@ -123,6 +120,7 @@ def send_mail(to: str, subject: str, body: str, html: str | None = None) -> bool
 # ---------------------------------------------------------------------------
 # Typed email helpers (all callers should use these, not send_mail directly)
 # ---------------------------------------------------------------------------
+
 
 def send_otp_email(to: str, code: str, ttl_minutes: int = 10) -> bool:
     subject = "Your StegoChat login code"

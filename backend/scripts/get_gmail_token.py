@@ -10,7 +10,6 @@ It reads STEGOCHAT_GMAIL_CLIENT_ID and STEGOCHAT_GMAIL_CLIENT_SECRET from
 STEGOCHAT_GMAIL_REFRESH_TOKEN back into .env automatically.
 """
 
-import os
 import re
 import sys
 from pathlib import Path

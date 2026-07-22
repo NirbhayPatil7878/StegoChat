@@ -31,7 +31,7 @@ from app.core.crypto import DecryptionError, decrypt, encrypt
 # Constants / shared helpers
 # ---------------------------------------------------------------------------
 
-REAL_CHANNEL = 2   # blue — used by lsb / lsb-2bit / pvd / dct
+REAL_CHANNEL = 2  # blue — used by lsb / lsb-2bit / pvd / dct
 DECOY_CHANNEL = 0  # red  — decoy only supported on lsb
 _HEADER = struct.Struct(">I")
 
@@ -48,6 +48,7 @@ class StegoError(Exception):
 # Shared bit utilities
 # ---------------------------------------------------------------------------
 
+
 def _bytes_to_bits(data: bytes) -> np.ndarray:
     return np.unpackbits(np.frombuffer(data, dtype=np.uint8))
 
@@ -57,9 +58,7 @@ def _bits_to_bytes(bits: np.ndarray) -> bytes:
 
 
 def _seed(password: str, tag: str = "") -> int:
-    return int.from_bytes(
-        hashlib.sha256((password + tag).encode()).digest()[:8], "big"
-    )
+    return int.from_bytes(hashlib.sha256((password + tag).encode()).digest()[:8], "big")
 
 
 def _perm(password: str, n: int, tag: str = "") -> np.ndarray:
@@ -70,15 +69,14 @@ def _perm(password: str, n: int, tag: str = "") -> np.ndarray:
 # Method 1: LSB — blue channel, 1 bit/pixel, permuted  (original)
 # ---------------------------------------------------------------------------
 
+
 def _embed_lsb(arr: np.ndarray, payload: bytes, password: str) -> None:
     flat = arr[:, :, REAL_CHANNEL].reshape(-1)
     body = _HEADER.pack(len(payload)) + payload
     bits = _bytes_to_bits(body)
     if bits.size > flat.size:
-        raise StegoError(
-            f"Cover image too small: needs {bits.size} bits, has {flat.size}."
-        )
-    order = _perm(password, flat.size)[:bits.size]
+        raise StegoError(f"Cover image too small: needs {bits.size} bits, has {flat.size}.")
+    order = _perm(password, flat.size)[: bits.size]
     flat[order] = (flat[order] & 0xFE) | bits
 
 
@@ -89,7 +87,7 @@ def _extract_lsb(arr: np.ndarray, password: str) -> bytes:
     (length,) = _HEADER.unpack(_bits_to_bytes(header_bits))
     if length <= 0 or 32 + length * 8 > flat.size:
         raise StegoError("No valid LSB payload for this password")
-    payload_bits = (flat[order[32: 32 + length * 8]] & 1).astype(np.uint8)
+    payload_bits = (flat[order[32 : 32 + length * 8]] & 1).astype(np.uint8)
     return _bits_to_bytes(payload_bits)
 
 
@@ -99,10 +97,8 @@ def _embed_lsb_channel(arr: np.ndarray, channel: int, payload: bytes, password: 
     body = _HEADER.pack(len(payload)) + payload
     bits = _bytes_to_bits(body)
     if bits.size > flat.size:
-        raise StegoError(
-            f"Cover image too small: needs {bits.size} bits, has {flat.size}."
-        )
-    order = _perm(password, flat.size)[:bits.size]
+        raise StegoError(f"Cover image too small: needs {bits.size} bits, has {flat.size}.")
+    order = _perm(password, flat.size)[: bits.size]
     flat[order] = (flat[order] & 0xFE) | bits
 
 
@@ -113,13 +109,14 @@ def _extract_lsb_channel(arr: np.ndarray, channel: int, password: str) -> bytes:
     (length,) = _HEADER.unpack(_bits_to_bytes(header_bits))
     if length <= 0 or 32 + length * 8 > flat.size:
         raise StegoError("No valid payload for this password")
-    payload_bits = (flat[order[32: 32 + length * 8]] & 1).astype(np.uint8)
+    payload_bits = (flat[order[32 : 32 + length * 8]] & 1).astype(np.uint8)
     return _bits_to_bytes(payload_bits)
 
 
 # ---------------------------------------------------------------------------
 # Method 2: LSB-RGB — 1 bit per channel across all 3 channels, 3× capacity
 # ---------------------------------------------------------------------------
+
 
 def _embed_lsb_rgb(arr: np.ndarray, payload: bytes, password: str) -> None:
     # Treat arr as (N*3,) flat stream: R0,G0,B0,R1,G1,B1,...
@@ -130,7 +127,7 @@ def _embed_lsb_rgb(arr: np.ndarray, payload: bytes, password: str) -> None:
         raise StegoError(
             f"Cover image too small for lsb-rgb: needs {bits.size} bits, has {flat.size}."
         )
-    order = _perm(password, flat.size, ":rgb")[:bits.size]
+    order = _perm(password, flat.size, ":rgb")[: bits.size]
     flat[order] = (flat[order] & 0xFE) | bits
 
 
@@ -141,13 +138,14 @@ def _extract_lsb_rgb(arr: np.ndarray, password: str) -> bytes:
     (length,) = _HEADER.unpack(_bits_to_bytes(header_bits))
     if length <= 0 or 32 + length * 8 > flat.size:
         raise StegoError("No valid lsb-rgb payload for this password")
-    payload_bits = (flat[order[32: 32 + length * 8]] & 1).astype(np.uint8)
+    payload_bits = (flat[order[32 : 32 + length * 8]] & 1).astype(np.uint8)
     return _bits_to_bytes(payload_bits)
 
 
 # ---------------------------------------------------------------------------
 # Method 3: LSB-2BIT — 2 LSBs per pixel, blue channel, 2× capacity
 # ---------------------------------------------------------------------------
+
 
 def _embed_lsb_2bit(arr: np.ndarray, payload: bytes, password: str) -> None:
     flat = arr[:, :, REAL_CHANNEL].reshape(-1).copy()
@@ -172,7 +170,7 @@ def _extract_lsb_2bit(arr: np.ndarray, password: str) -> bytes:
     order = _perm(password, flat.size, ":2bit")
 
     # Header: 32 bits → 16 pixels
-    header_vals = (flat[order[:16]] & 0x03)
+    header_vals = flat[order[:16]] & 0x03
     header_bits = np.zeros(32, dtype=np.uint8)
     header_bits[0::2] = (header_vals >> 1) & 1
     header_bits[1::2] = header_vals & 1
@@ -182,7 +180,7 @@ def _extract_lsb_2bit(arr: np.ndarray, password: str) -> bytes:
     if length <= 0 or 16 + n_slots > flat.size:
         raise StegoError("No valid lsb-2bit payload for this password")
 
-    payload_vals = (flat[order[16: 16 + n_slots]] & 0x03)
+    payload_vals = flat[order[16 : 16 + n_slots]] & 0x03
     payload_bits = np.zeros(n_slots * 2, dtype=np.uint8)
     payload_bits[0::2] = (payload_vals >> 1) & 1
     payload_bits[1::2] = payload_vals & 1
@@ -196,6 +194,7 @@ def _extract_lsb_2bit(arr: np.ndarray, password: str) -> bytes:
 #   embed 3 secret bits by replacing the lower 3 bits of |p2 - p1|.
 #   Recover: secret = |p2 - p1| & 7
 # ---------------------------------------------------------------------------
+
 
 def _embed_pvd(arr: np.ndarray, payload: bytes, password: str) -> None:
     flat = arr[:, :, REAL_CHANNEL].reshape(-1).astype(np.int32).copy()
@@ -221,12 +220,12 @@ def _embed_pvd(arr: np.ndarray, payload: bytes, password: str) -> None:
         sign = 1 if d >= 0 else -1
 
         take = min(3, len(bits) - bit_idx)
-        chunk = bits[bit_idx: bit_idx + take]
+        chunk = bits[bit_idx : bit_idx + take]
         if take < 3:
             chunk = np.pad(chunk, (0, 3 - take))
         secret_3 = int(chunk[0]) * 4 + int(chunk[1]) * 2 + int(chunk[2])
 
-        new_d_abs = (d_abs & ~7) | secret_3   # replace lower 3 bits
+        new_d_abs = (d_abs & ~7) | secret_3  # replace lower 3 bits
         new_d = sign * new_d_abs
         p2_target = p1 + new_d
 
@@ -235,11 +234,11 @@ def _embed_pvd(arr: np.ndarray, payload: bytes, password: str) -> None:
         elif p2_target > 255:
             # Move both: p2=255, p1 = 255 - new_d_abs
             flat[i + 1] = 255
-            flat[i] = 255 - new_d_abs   # always ≥ 0 since new_d_abs ≤ 255
+            flat[i] = 255 - new_d_abs  # always ≥ 0 since new_d_abs ≤ 255
         else:
             # p2_target < 0: p2=0, p1 = new_d_abs
             flat[i + 1] = 0
-            flat[i] = new_d_abs          # always ≤ 255
+            flat[i] = new_d_abs  # always ≤ 255
 
         bit_idx += take
 
@@ -284,14 +283,26 @@ _N8 = 8
 _k8 = np.arange(_N8, dtype=float)[:, None]
 _n8 = np.arange(_N8, dtype=float)[None, :]
 _DCT_M: np.ndarray = np.cos(np.pi * _k8 * (2 * _n8 + 1) / (2 * _N8)) * np.sqrt(2.0 / _N8)
-_DCT_M[0] *= np.sqrt(0.5)   # orthonormal scaling for DC row
+_DCT_M[0] *= np.sqrt(0.5)  # orthonormal scaling for DC row
 
 # Mid-frequency positions (zigzag bands 4-7)
 _DCT_POS = [
-    (0, 3), (1, 2), (2, 1), (3, 0),
-    (0, 4), (1, 3), (2, 2), (3, 1), (4, 0),
-    (1, 4), (2, 3), (3, 2), (4, 1),
-    (2, 4), (3, 3), (4, 2),
+    (0, 3),
+    (1, 2),
+    (2, 1),
+    (3, 0),
+    (0, 4),
+    (1, 3),
+    (2, 2),
+    (3, 1),
+    (4, 0),
+    (1, 4),
+    (2, 3),
+    (3, 2),
+    (4, 1),
+    (2, 4),
+    (3, 3),
+    (4, 2),
 ]  # 16 positions → 16 bits per 8×8 block
 
 _Q = 20  # quantisation step; large enough to survive uint8 round-trip
@@ -316,9 +327,7 @@ def _embed_dct(arr: np.ndarray, payload: bytes, password: str) -> None:
     bits = _bytes_to_bits(body)
 
     if len(bits) > cap:
-        raise StegoError(
-            f"Cover too small for DCT: capacity {cap} bits, needs {len(bits)}."
-        )
+        raise StegoError(f"Cover too small for DCT: capacity {cap} bits, needs {len(bits)}.")
 
     order = _perm(password, n_blocks, ":dct")
     bit_idx = 0
@@ -328,10 +337,10 @@ def _embed_dct(arr: np.ndarray, payload: bytes, password: str) -> None:
             break
         br, bc = divmod(int(block_i), bw)
         r0, c0 = br * _N8, bc * _N8
-        block = ch[r0: r0 + _N8, c0: c0 + _N8]
+        block = ch[r0 : r0 + _N8, c0 : c0 + _N8]
         D = _dct2(block - 128.0)
 
-        for (r, c) in _DCT_POS:
+        for r, c in _DCT_POS:
             if bit_idx >= len(bits):
                 break
             bit = int(bits[bit_idx])
@@ -341,7 +350,7 @@ def _embed_dct(arr: np.ndarray, payload: bytes, password: str) -> None:
             D[r, c] = q * _Q
             bit_idx += 1
 
-        ch[r0: r0 + _N8, c0: c0 + _N8] = np.clip(_idct2(D) + 128.0, 0, 255)
+        ch[r0 : r0 + _N8, c0 : c0 + _N8] = np.clip(_idct2(D) + 128.0, 0, 255)
 
     arr[:, :, REAL_CHANNEL] = ch.astype(np.uint8)
 
@@ -361,18 +370,16 @@ def _extract_dct(arr: np.ndarray, password: str) -> bytes:
             break
         br, bc = divmod(int(block_i), bw)
         r0, c0 = br * _N8, bc * _N8
-        D = _dct2(ch[r0: r0 + _N8, c0: c0 + _N8] - 128.0)
+        D = _dct2(ch[r0 : r0 + _N8, c0 : c0 + _N8] - 128.0)
 
-        for (r, c) in _DCT_POS:
+        for r, c in _DCT_POS:
             if length is not None and len(all_bits) >= 32 + length * 8:
                 break
             q = int(round(D[r, c] / _Q))
             all_bits.append(q % 2)
 
         if length is None and len(all_bits) >= 32:
-            (length,) = _HEADER.unpack(
-                _bits_to_bytes(np.array(all_bits[:32], dtype=np.uint8))
-            )
+            (length,) = _HEADER.unpack(_bits_to_bytes(np.array(all_bits[:32], dtype=np.uint8)))
             if not (0 < length <= n_blocks * len(_DCT_POS) // 8):
                 raise StegoError("No valid DCT payload for this password")
 
@@ -387,6 +394,7 @@ def _extract_dct(arr: np.ndarray, password: str) -> bytes:
 # ---------------------------------------------------------------------------
 # Dispatch helpers
 # ---------------------------------------------------------------------------
+
 
 def _embed_payload(arr: np.ndarray, payload: bytes, password: str, method: str) -> None:
     if method == "lsb":
@@ -421,6 +429,7 @@ def _extract_payload(arr: np.ndarray, password: str, method: str) -> bytes:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def embed_message(
     cover: str | bytes | BytesIO,
@@ -518,7 +527,7 @@ def embed_message_split(
     total = len(covers)
     group = secrets.token_hex(4)
     size = -(-len(b64) // total)
-    shards = [b64[i * size: (i + 1) * size] for i in range(total)]
+    shards = [b64[i * size : (i + 1) * size] for i in range(total)]
 
     outputs: list[bytes] = []
     for index, (cover, shard) in enumerate(zip(covers, shards, strict=True)):

@@ -56,7 +56,7 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.services.activity import log_activity
-from app.services.mail import send_mail, send_otp_email, send_reset_email, send_verification_email
+from app.services.mail import send_otp_email, send_reset_email, send_verification_email
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -72,7 +72,7 @@ def _send_signup_otp(db: Session, user: User) -> None:
         OneTimeToken.purpose == _SIGNUP_OTP_PURPOSE,
         OneTimeToken.used.is_(False),
     ).update({"used": True})
-    code = f"{secrets.randbelow(10 ** 6):06d}"
+    code = f"{secrets.randbelow(10**6):06d}"
     db.add(
         OneTimeToken(
             user_id=user.id,
@@ -144,7 +144,12 @@ def signup_verify_otp(
         tokens = _issue_tokens(db, user)
         db.commit()
         db.refresh(user)
-        return {"status": "ok", "already_verified": True, "user": UserPublic.model_validate(user), "tokens": tokens}
+        return {
+            "status": "ok",
+            "already_verified": True,
+            "user": UserPublic.model_validate(user),
+            "tokens": tokens,
+        }
 
     record = (
         db.query(OneTimeToken)
@@ -175,8 +180,12 @@ def signup_verify_otp(
     user.email_verified = True
     tokens = _issue_tokens(db, user)
     log_activity(
-        db, user.id, ActivityType.SETTINGS_UPDATE, detail="email:verified",
-        ip_address=_client_ip(request), commit=False,
+        db,
+        user.id,
+        ActivityType.SETTINGS_UPDATE,
+        detail="email:verified",
+        ip_address=_client_ip(request),
+        commit=False,
     )
     db.commit()
     db.refresh(user)
@@ -351,7 +360,7 @@ def _send_email_otp(db: Session, user: User) -> OtpEmailChallenge:
         OneTimeToken.used.is_(False),
     ).update({"used": True})
 
-    code = f"{secrets.randbelow(10 ** 6):06d}"
+    code = f"{secrets.randbelow(10**6):06d}"
     db.add(
         OneTimeToken(
             user_id=user.id,
@@ -392,7 +401,9 @@ def otp_verify(payload: OtpVerifyRequest, request: Request, db: Session = Depend
         .first()
     )
     if not record:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="No OTP issued — request a new login")
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, detail="No OTP issued — request a new login"
+        )
 
     expires_at = record.expires_at
     if expires_at.tzinfo is None:
