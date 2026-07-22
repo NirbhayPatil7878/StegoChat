@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/logo.svg" width="96" alt="StegoChat" />
+<img src="frontend/public/logo-wordmark.png" width="320" alt="StegoChat" />
 
 # StegoChat
 
