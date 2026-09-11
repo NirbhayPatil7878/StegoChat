@@ -49,6 +49,10 @@ _ADDITIVE_COLUMNS: dict[str, list[tuple[str, str]]] = {
         ("totp_secret", "VARCHAR(64)"),
         ("totp_enabled", "BOOLEAN NOT NULL DEFAULT 0"),
         ("totp_recovery_codes", "TEXT"),
+        ("email_otp_enabled", "BOOLEAN NOT NULL DEFAULT 0"),
+    ],
+    "settings": [
+        ("stego_method", "VARCHAR(16) NOT NULL DEFAULT 'lsb'"),
     ],
 }
 

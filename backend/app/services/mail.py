@@ -112,8 +112,18 @@ def send_mail(to: str, subject: str, body: str, html: str | None = None) -> bool
         msg = _build_mime(to, subject, body, html)
         return _send_via_smtp(msg)
 
-    # Dev mode — log and let callers surface the token in the API response.
-    logger.info("[dev mail] to=%s subject=%r\n%s", to, subject, body)
+    # Dev mode — log cleanly and let callers surface the token in the API response.
+    logger.info(
+        "[dev mail] Simulated dispatch (no SMTP/Gmail configured)\n"
+        "--------------------- [DEV OUTBOUND MAIL] ---------------------\n"
+        "To:      %s\n"
+        "Subject: %s\n"
+        "Body:\n%s\n"
+        "----------------------------------------------------------------",
+        to,
+        subject,
+        body.strip(),
+    )
     return False
 
 

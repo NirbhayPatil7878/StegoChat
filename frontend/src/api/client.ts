@@ -13,6 +13,9 @@ const api = axios.create({
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
   return config;
 });
 
@@ -21,7 +24,10 @@ let refreshing: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
   const { refreshToken, setTokens, clear } = useAuthStore.getState();
-  if (!refreshToken) return null;
+  if (!refreshToken) {
+    clear();
+    return null;
+  }
   try {
     const { data } = await axios.post(
       `${api.defaults.baseURL}/auth/refresh`,
@@ -33,6 +39,8 @@ async function refreshAccessToken(): Promise<string | null> {
   } catch {
     clear();
     return null;
+  } finally {
+    refreshing = null;
   }
 }
 
@@ -48,9 +56,10 @@ api.interceptors.response.use(
     const isAuthRoute = url.includes("/auth/");
     if (status === 401 && original && !original._retry && !isAuthRoute) {
       original._retry = true;
-      refreshing = refreshing || refreshAccessToken();
+      if (!refreshing) {
+        refreshing = refreshAccessToken();
+      }
       const newToken = await refreshing;
-      refreshing = null;
       if (newToken) {
         original.headers = original.headers || {};
         (original.headers as Record<string, string>).Authorization =

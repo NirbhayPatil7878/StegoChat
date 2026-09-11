@@ -50,6 +50,7 @@ class UserPublic(BaseModel):
 class AuthResponse(BaseModel):
     user: UserPublic
     tokens: TokenPair
+    dev_otp: str | None = None
 
 
 class TwoFactorChallenge(BaseModel):
@@ -64,6 +65,7 @@ class OtpEmailChallenge(BaseModel):
 
     otp_email_required: bool = True
     challenge_token: str
+    dev_otp: str | None = None
 
 
 class TwoFactorSetupResponse(BaseModel):

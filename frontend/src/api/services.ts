@@ -100,53 +100,25 @@ export const stegoApi = {
   samples: () =>
     api.get<{ samples: SampleImage[] }>("/samples").then((r) => r.data.samples),
   embed: (form: FormData) =>
-    api
-      .post<EmbedResponse>("/embed", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data),
+    api.post<EmbedResponse>("/embed", form).then((r) => r.data),
   extract: (form: FormData) =>
-    api
-      .post<ExtractResponse>("/extract", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data),
+    api.post<ExtractResponse>("/extract", form).then((r) => r.data),
   // Multi-image split embedding
   embedSplit: (form: FormData) =>
-    api
-      .post<SplitEmbedResponse>("/embed-split", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data),
+    api.post<SplitEmbedResponse>("/embed-split", form).then((r) => r.data),
   extractSplit: (form: FormData) =>
-    api
-      .post<ExtractResponse>("/extract-split", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data),
+    api.post<ExtractResponse>("/extract-split", form).then((r) => r.data),
   // Universal file-in-file hiding
   hideFile: (form: FormData) =>
-    api
-      .post<EmbedResponse>("/hide-file", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data),
+    api.post<EmbedResponse>("/hide-file", form).then((r) => r.data),
   revealFile: (form: FormData) =>
-    api
-      .post<ExtractResponse>("/reveal-file", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data),
+    api.post<ExtractResponse>("/reveal-file", form).then((r) => r.data),
   scanRisk: (message: string) =>
     api.post<RiskScan>("/scan-risk", { message }).then((r) => r.data),
   forensics: (file: File) => {
     const form = new FormData();
     form.append("image", file);
-    return api
-      .post<ForensicResult>("/forensics", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data);
+    return api.post<ForensicResult>("/forensics", form).then((r) => r.data);
   },
 };
 
@@ -197,11 +169,7 @@ export const chatApi = {
       })
       .then((r) => r.data),
   sendStego: (convId: number, form: FormData) =>
-    api
-      .post<DirectMessage>(`/conversations/${convId}/stego`, form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((r) => r.data),
+    api.post<DirectMessage>(`/conversations/${convId}/stego`, form).then((r) => r.data),
   reveal: (messageId: number, password: string) =>
     api
       .post<{ message: string }>(`/messages/${messageId}/reveal`, { password })

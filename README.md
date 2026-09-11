@@ -51,43 +51,79 @@ StegoChat lets you **encrypt a message and hide it inside an image's pixels** �
 
 ## Quick start
 
+For detailed step-by-step setup guides, troubleshooting, and configuration options, see [**`SETUP.md`**](SETUP.md).
+
 ### Option A — Local dev
 
-**Prerequisites:** Python 3.11+, Node 18+
+**Prerequisites:** Python 3.11+, Node 18+, Git
 
-**1. Backend**
-```bash
+#### 🪟 Windows (PowerShell)
+
+**1. Backend (Terminal 1)**
+```powershell
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt -r requirements-dev.txt
+Copy-Item .env.example .env
+alembic upgrade head
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
-API: `http://localhost:8000` · Docs: `http://localhost:8000/api/docs`
-SQLite database is created automatically — no database server needed.
+API: `http://127.0.0.1:8000` · Docs: `http://127.0.0.1:8000/api/docs`
 
-**2. Frontend**
-```bash
+**2. Frontend (Terminal 2)**
+```powershell
 cd frontend
 npm install
+Copy-Item .env.example .env
 npm run dev
 ```
-App: `http://localhost:5173` · The dev server proxies `/api` to the backend automatically.
+App: `http://localhost:5173` · Proxies `/api` to the backend automatically.
 
 ---
 
-### Option B — Docker (one command)
+#### 🐧 macOS / Linux (Bash/Zsh)
+
+**1. Backend (Terminal 1)**
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+cp .env.example .env
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+```
+
+**2. Frontend (Terminal 2)**
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+App: `http://localhost:5173` · API: `http://localhost:8000` · Docs: `http://localhost:8000/api/docs`
+*(SQLite database is created automatically — no external database server needed).*
+
+---
+
+### Option B — Docker (Docker Desktop / Compose)
 
 ```bash
-cp .env.example .env    # set STEGOCHAT_SECRET_KEY
+# Windows (PowerShell): Copy-Item .env.example .env
+# Linux / macOS:        cp .env.example .env
+Copy-Item .env.example .env
+
+# Generate a strong secret key:
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+# Set STEGOCHAT_SECRET_KEY in .env, then:
 docker compose up --build
 ```
 
 App: `http://localhost:8080` — runs Postgres + FastAPI + nginx-served frontend together.
-
-Generate a strong secret key:
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(48))"
-```
+For containerized database migrations: `docker compose exec backend alembic upgrade head`
 
 ---
 

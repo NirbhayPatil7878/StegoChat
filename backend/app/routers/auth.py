@@ -65,7 +65,7 @@ _SIGNUP_OTP_PURPOSE = "signup_verify"
 _SIGNUP_OTP_TTL_MINUTES = 15
 
 
-def _send_signup_otp(db: Session, user: User) -> None:
+def _send_signup_otp(db: Session, user: User) -> str | None:
     """Generate a 6-digit OTP and email it for signup email verification."""
     db.query(OneTimeToken).filter(
         OneTimeToken.user_id == user.id,
@@ -81,7 +81,8 @@ def _send_signup_otp(db: Session, user: User) -> None:
             expires_at=datetime.now(UTC) + timedelta(minutes=_SIGNUP_OTP_TTL_MINUTES),
         )
     )
-    send_otp_email(user.email, code, _SIGNUP_OTP_TTL_MINUTES)
+    sent = send_otp_email(user.email, code, _SIGNUP_OTP_TTL_MINUTES)
+    return None if sent else code
 
 
 def _issue_tokens(db: Session, user: User) -> TokenPair:
@@ -125,10 +126,10 @@ def register(payload: RegisterRequest, request: Request, db: Session = Depends(g
     tokens = _issue_tokens(db, user)
     user.last_login = datetime.now(UTC)
     log_activity(db, user.id, ActivityType.REGISTER, ip_address=_client_ip(request), commit=False)
-    _send_signup_otp(db, user)
+    dev_otp = _send_signup_otp(db, user)
     db.commit()
     db.refresh(user)
-    return AuthResponse(user=UserPublic.model_validate(user), tokens=tokens)
+    return AuthResponse(user=UserPublic.model_validate(user), tokens=tokens, dev_otp=dev_otp)
 
 
 @router.post("/signup-verify-otp", status_code=status.HTTP_200_OK)
@@ -207,9 +208,12 @@ def signup_resend_otp(
     """Resend the signup verification OTP."""
     if user.email_verified:
         raise HTTPException(status.HTTP_409_CONFLICT, detail="Email is already verified")
-    _send_signup_otp(db, user)
+    dev_otp = _send_signup_otp(db, user)
     db.commit()
-    return {"status": "ok", "message": "A new verification code has been sent to your email"}
+    res: dict[str, str] = {"status": "ok", "message": "A new verification code has been sent to your email"}
+    if dev_otp:
+        res["dev_otp"] = dev_otp
+    return res
 
 
 @router.post("/login", response_model=AuthResponse | TwoFactorChallenge | OtpEmailChallenge)
@@ -371,8 +375,11 @@ def _send_email_otp(db: Session, user: User) -> OtpEmailChallenge:
     )
     db.commit()
 
-    send_otp_email(user.email, code, _OTP_TTL_MINUTES)
-    return OtpEmailChallenge(challenge_token=create_challenge_token(user.id))
+    sent = send_otp_email(user.email, code, _OTP_TTL_MINUTES)
+    return OtpEmailChallenge(
+        challenge_token=create_challenge_token(user.id),
+        dev_otp=None if sent else code,
+    )
 
 
 @router.post("/otp/verify", response_model=AuthResponse)
