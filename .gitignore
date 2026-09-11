@@ -31,3 +31,7 @@ server.pid
 .idea/
 .vscode/
 *.swp
+
+# Documentation & presentations outside source tree
+_antigravity_docs/
+_antigravity_presentations/
