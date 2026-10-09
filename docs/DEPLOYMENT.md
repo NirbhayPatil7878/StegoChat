@@ -4,7 +4,8 @@
 
 ```bash
 cp .env.example .env
-# Edit .env: set a strong STEGOCHAT_SECRET_KEY and Postgres credentials.
+# Set a strong STEGOCHAT_SECRET_KEY and Postgres credentials in .env.
+# Copy backend/.env.example to backend/.env and set the Brevo SMTP login/key.
 docker compose up --build -d
 ```
 
@@ -15,6 +16,11 @@ Services:
 
 The UI is exposed on `WEB_PORT` (default 8080). Put a TLS-terminating reverse
 proxy (Caddy, Traefik, or nginx) in front for HTTPS.
+
+Set mail-provider values in `backend/.env`; Compose forwards them to the
+backend container. Keep credentials out of source control. A fully configured
+SMTP provider takes priority over Gmail API, and failures never fall back to
+console delivery. SMTP on port 587 uses STARTTLS.
 
 Generate a secret:
 ```bash

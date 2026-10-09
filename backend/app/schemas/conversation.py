@@ -32,6 +32,7 @@ class DirectMessagePublic(BaseModel):
     sender_id: int
     sender_username: str
     kind: str
+    is_e2ee: bool = False
     body: str | None = None
     stego_url: str | None = None
     created_at: datetime
@@ -71,3 +72,17 @@ class RevealRequest(BaseModel):
 
 class RevealResponse(BaseModel):
     message: str
+
+
+class PublicKeyRegistration(BaseModel):
+    public_key: str = Field(..., min_length=100, max_length=2000)
+
+
+class KeyEnvelopeInput(BaseModel):
+    user_id: int
+    envelope: str = Field(..., min_length=1, max_length=4096)
+
+
+class E2EESendInput(BaseModel):
+    envelopes: list[KeyEnvelopeInput] = Field(..., min_length=1, max_length=51)
+    expire_minutes: int | None = Field(default=None, ge=1, le=43_200)

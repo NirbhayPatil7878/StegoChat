@@ -44,11 +44,13 @@ _ADDITIVE_COLUMNS: dict[str, list[tuple[str, str]]] = {
     "direct_messages": [
         ("has_decoy", "BOOLEAN NOT NULL DEFAULT 0"),
         ("expires_at", "DATETIME"),
+        ("is_e2ee", "BOOLEAN NOT NULL DEFAULT 0"),
     ],
     "users": [
         ("totp_secret", "VARCHAR(64)"),
         ("totp_enabled", "BOOLEAN NOT NULL DEFAULT 0"),
         ("totp_recovery_codes", "TEXT"),
+        ("e2ee_public_key", "TEXT"),
     ],
 }
 

@@ -2,7 +2,7 @@
 
 from app.models.activity import ActivityLog, ActivityType
 from app.models.chat import Chat
-from app.models.conversation import Conversation, ConversationMember, DirectMessage
+from app.models.conversation import Conversation, ConversationMember, DirectMessage, MessageKeyEnvelope
 from app.models.dead_drop import DeadDrop
 from app.models.message import Message
 from app.models.setting import Setting
@@ -18,6 +18,7 @@ __all__ = [
     "ConversationMember",
     "DeadDrop",
     "DirectMessage",
+    "MessageKeyEnvelope",
     "Message",
     "Setting",
     "ShareToken",

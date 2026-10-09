@@ -9,6 +9,7 @@ from app.database import Base
 if TYPE_CHECKING:
     from app.models.activity import ActivityLog
     from app.models.chat import Chat
+    from app.models.conversation import MessageKeyEnvelope
     from app.models.setting import Setting
     from app.models.token import RefreshToken
 
@@ -36,6 +37,8 @@ class User(Base):
     totp_recovery_codes: Mapped[str | None] = mapped_column(Text, nullable=True)
     # --- Email OTP login (second factor sent to inbox) ---
     email_otp_enabled: Mapped[bool] = mapped_column(default=False, nullable=False)
+    # Public half of the user's browser-held E2EE identity; private keys stay local.
+    e2ee_public_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now()
     )
@@ -49,5 +52,8 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    e2ee_envelopes: Mapped[list["MessageKeyEnvelope"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

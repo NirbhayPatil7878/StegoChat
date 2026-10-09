@@ -34,6 +34,7 @@ import { Button, EmptyState, Spinner } from "@/components/ui";
 import { useAuthStore } from "@/store/auth";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { randomDecoyMessage, randomDecoyPassword } from "@/lib/decoy";
+import { createE2EEImage, ensureE2EEIdentity, getLocalIdentity, decryptE2EEImage } from "@/lib/e2ee";
 import { EXPIRE_OPTIONS, cn, timeAgo, timeUntil } from "@/lib/utils";
 import type { Conversation, DirectMessage, SampleImage, UserBrief } from "@/types";
 
@@ -352,10 +353,12 @@ function ConvMenu({ conv, onRename }: { conv: Conversation; onRename: () => void
 // --- Stego composer modal ----------------------------------------------------
 function StegoComposer({
   convId,
+  isGroup,
   onSent,
   onClose,
 }: {
   convId: number;
+  isGroup: boolean;
   onSent: () => void;
   onClose: () => void;
 }) {
@@ -367,6 +370,7 @@ function StegoComposer({
   const [decoyMessage, setDecoyMessage] = useState("");
   const [decoyPassword, setDecoyPassword] = useState("");
   const [expireMinutes, setExpireMinutes] = useState(0);
+  const me = useAuthStore((s) => s.user);
 
   const { data: samples } = useQuery({ queryKey: ["samples"], queryFn: stegoApi.samples });
 
@@ -391,7 +395,17 @@ function StegoComposer({
   const decoyDistinct = !decoyOn || decoyPassword !== password;
 
   const send = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
+      if (isGroup) {
+        if (!me) throw new Error("Sign in again to send an encrypted image.");
+        await ensureE2EEIdentity(me.id, async (key) => { await chatApi.registerE2EEKey(key); });
+        const keys = await chatApi.e2eeKeys(convId);
+        const missing = keys.find((k) => !k.public_key);
+        if (missing) throw new Error("Every group member must initialize E2EE before encrypted images can be sent.");
+        const cover = file ?? await chatApi.downloadImage(samples?.find((s) => s.name === sample)?.url ?? "");
+        const created = await createE2EEImage(cover, message, keys.map((k) => ({ user_id: k.user_id, public_key: k.public_key! })));
+        return chatApi.sendE2EE(convId, created.image, created.envelopes, expireMinutes);
+      }
       const form = new FormData();
       form.append("message", message);
       form.append("password", password);
@@ -408,11 +422,11 @@ function StegoComposer({
       toast.success("Hidden message sent");
       onSent();
     },
-    onError: (e) => toast.error(apiError(e, "Failed to send")),
+    onError: (e) => toast.error(e instanceof Error && !("response" in e) ? e.message : apiError(e, "Failed to send")),
   });
 
   const canSend =
-    message.trim() && password && (file || sample) && decoyReady && decoyDistinct;
+    message.trim() && (isGroup || password) && (file || sample) && (isGroup || (decoyReady && decoyDistinct));
 
   return (
     <Modal open onClose={onClose} title="Send a hidden message" className="max-w-2xl">
@@ -427,14 +441,15 @@ function StegoComposer({
               onChange={(e) => setMessage(e.target.value)}
             />
           </div>
-          <div>
+          {isGroup && <p className="rounded-xl bg-accent/10 p-3 text-xs text-muted">Group images use end-to-end encryption. Each current member receives a separate encrypted key. Decoy messages are unavailable for E2EE images.</p>}
+          {!isGroup && <div>
             <label className="label">Password</label>
             <PasswordInput
               placeholder="Recipient needs this to reveal"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-          </div>
+          </div>}
 
           {/* Self-destruct timer */}
           <div>
@@ -460,8 +475,8 @@ function StegoComposer({
             </div>
           </div>
 
-          {/* Decoy channel */}
-          <div>
+          {/* Decoy channel is retained for legacy direct messages. */}
+          {!isGroup && <div>
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
@@ -510,7 +525,7 @@ function StegoComposer({
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </div>}
         </div>
 
         <div>
@@ -577,9 +592,9 @@ function StegoComposer({
         onClick={() => send.mutate()}
       >
         <Lock className="h-4 w-4" /> Embed &amp; send
-        {(decoyOn || expireMinutes > 0) && (
+        {((!isGroup && decoyOn) || expireMinutes > 0) && (
           <span className="ml-1 flex items-center gap-1.5 text-xs opacity-80">
-            {decoyOn && <VenetianMask className="h-3.5 w-3.5" />}
+            {!isGroup && decoyOn && <VenetianMask className="h-3.5 w-3.5" />}
             {expireMinutes > 0 && (
               <>
                 <Timer className="h-3.5 w-3.5" />
@@ -598,14 +613,21 @@ function StegoBubble({ msg, mine }: { msg: DirectMessage; mine: boolean }) {
   const [revealing, setRevealing] = useState(false);
   const [password, setPassword] = useState("");
   const [revealed, setRevealed] = useState<string | null>(null);
+  const me = useAuthStore((s) => s.user);
 
   const reveal = useMutation({
-    mutationFn: () => chatApi.reveal(msg.id, password),
-    onSuccess: (r) => {
-      setRevealed(r.message);
+    mutationFn: async () => {
+      if (!msg.is_e2ee) return (await chatApi.reveal(msg.id, password)).message;
+      if (!me || !msg.stego_url) throw new Error("Could not load this encrypted image.");
+      const [identity, envelope] = await Promise.all([getLocalIdentity(me.id), chatApi.e2eeEnvelope(msg.id)]);
+      const image = await chatApi.downloadImage(envelope.stego_url);
+      return decryptE2EEImage(image, envelope.envelope, identity.privateKey);
+    },
+    onSuccess: (plaintext) => {
+      setRevealed(plaintext);
       setRevealing(false);
     },
-    onError: () => toast.error("Wrong password or no hidden message"),
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Wrong password or no hidden message"),
   });
 
   return (
@@ -624,7 +646,7 @@ function StegoBubble({ msg, mine }: { msg: DirectMessage; mine: boolean }) {
           <Unlock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
           <p className="whitespace-pre-wrap break-words">{revealed}</p>
         </div>
-      ) : revealing ? (
+      ) : revealing && !msg.is_e2ee ? (
         <form
           className="flex items-center gap-2"
           onSubmit={(e) => {
@@ -652,7 +674,8 @@ function StegoBubble({ msg, mine }: { msg: DirectMessage; mine: boolean }) {
         </form>
       ) : (
         <button
-          onClick={() => setRevealing(true)}
+          onClick={() => msg.is_e2ee ? reveal.mutate() : setRevealing(true)}
+          disabled={reveal.isPending}
           className={cn(
             "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
             mine
@@ -660,7 +683,7 @@ function StegoBubble({ msg, mine }: { msg: DirectMessage; mine: boolean }) {
               : "bg-accent/15 text-accent hover:bg-accent/25",
           )}
         >
-          <Lock className="h-3 w-3" /> Reveal hidden message
+          {reveal.isPending ? <Spinner /> : <Lock className="h-3 w-3" />} {msg.is_e2ee ? "Decrypt hidden message" : "Reveal hidden message"}
         </button>
       )}
     </div>
@@ -1055,6 +1078,7 @@ function Thread({
         {stegoOpen && (
           <StegoComposer
             convId={conv.id}
+            isGroup={conv.is_group}
             onClose={() => setStegoOpen(false)}
             onSent={() => {
               setStegoOpen(false);
@@ -1092,6 +1116,14 @@ export default function Chat() {
   const [q, setQ] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const qc = useQueryClient();
+  const userId = useAuthStore((s) => s.user?.id);
+
+  useEffect(() => {
+    if (!userId) return;
+    ensureE2EEIdentity(userId, async (key) => { await chatApi.registerE2EEKey(key); }).catch(() => {
+      // E2EE send reports the actionable identity/key-recovery error in context.
+    });
+  }, [userId]);
 
   // Wide monitors (≥1920) open the preview panel by default; it stays
   // toggleable down to xl and is never rendered below that.

@@ -28,6 +28,14 @@ def fresh_db():
     Base.metadata.drop_all(bind=engine)
 
 
+@pytest.fixture(autouse=True)
+def mock_otp_delivery(monkeypatch):
+    """Keep general API tests isolated from real mail providers."""
+    from app.routers import auth
+
+    monkeypatch.setattr(auth, "send_otp_email", lambda *_args, **_kwargs: True)
+
+
 @pytest.fixture
 def client():
     with TestClient(app) as c:

@@ -4,10 +4,13 @@
 # Stringized annotations break FastAPI's UploadFile/File detection on this
 # version, so this router keeps real (evaluated) annotations.
 import contextlib
+import json
 import os
 from datetime import UTC, datetime, timedelta
+from io import BytesIO
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -16,21 +19,30 @@ from app.core.deps import get_current_user
 from app.core.rate_limit import limiter
 from app.core.stego import StegoError, embed_message, extract_message
 from app.database import get_db
-from app.models import ActivityType, Conversation, ConversationMember, DirectMessage, User
+from app.models import (
+    ActivityType,
+    Conversation,
+    ConversationMember,
+    DirectMessage,
+    MessageKeyEnvelope,
+    User,
+)
 from app.schemas.conversation import (
     ConversationCreate,
     ConversationPublic,
     ConversationUpdate,
     DirectMessagePublic,
+    E2EESendInput,
     GroupCreate,
     MarkReadRequest,
+    PublicKeyRegistration,
     RevealRequest,
     RevealResponse,
     TextMessageCreate,
     UserBrief,
 )
 from app.services.activity import log_activity
-from app.services.storage import read_image_upload, save_stego, upload_path
+from app.services.storage import read_image_upload, save_bytes, save_stego, upload_path
 
 router = APIRouter(prefix="/api", tags=["conversations"])
 
@@ -58,6 +70,7 @@ def _message_public(msg: DirectMessage) -> DirectMessagePublic:
         sender_id=msg.sender_id,
         sender_username=msg.sender.username if msg.sender else "unknown",
         kind=msg.kind,
+        is_e2ee=msg.is_e2ee,
         body=msg.body,
         stego_url=f"/api/files/{msg.stego_filename}" if msg.stego_filename else None,
         created_at=_as_utc(msg.created_at),
@@ -164,6 +177,66 @@ def search_users(
     if q.strip():
         query = query.filter(User.username.ilike(f"%{q.strip()}%"))
     return [UserBrief.model_validate(u) for u in query.order_by(User.username).limit(20)]
+
+
+@router.put("/users/e2ee-key")
+def register_e2ee_key(payload: PublicKeyRegistration, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    # Allow a key to be re-created before this account has any encrypted
+    # message envelopes. Once history exists, replacing the key would make it
+    # impossible to decrypt those messages without a recovery process.
+    try:
+        from Crypto.PublicKey import RSA
+
+        imported_key = RSA.import_key(payload.public_key)
+    except (ValueError, IndexError) as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid public key format") from exc
+    if imported_key.has_private() or imported_key.size_in_bits() < 3072:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid public key format")
+    updated = (
+        db.query(User)
+        .filter(
+            User.id == user.id,
+            (User.e2ee_public_key.is_(None)) | (User.e2ee_public_key == payload.public_key),
+        )
+        .update({User.e2ee_public_key: payload.public_key}, synchronize_session=False)
+    )
+    if updated != 1:
+        registered_key = db.query(User.e2ee_public_key).filter(User.id == user.id).scalar()
+        has_envelope_history = (
+            db.query(MessageKeyEnvelope.id)
+            .filter(MessageKeyEnvelope.user_id == user.id)
+            .first()
+            is not None
+        )
+        if registered_key != payload.public_key and not has_envelope_history:
+            updated = (
+                db.query(User)
+                .filter(User.id == user.id, User.e2ee_public_key == registered_key)
+                .update({User.e2ee_public_key: payload.public_key}, synchronize_session=False)
+            )
+        if updated != 1:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail=(
+                    "This account already has encrypted message history; "
+                    "key recovery is required before replacing its key"
+                ),
+            )
+    db.commit()
+    return {"status": "ok"}
+
+
+@router.get("/conversations/{conv_id}/e2ee-keys")
+def get_conversation_e2ee_keys(conv_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    conv, _ = _get_membership(db, conv_id, user)
+    if not conv.is_group:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="E2EE is available for group image messages")
+    return {
+        "keys": [
+            {"user_id": m.user_id, "public_key": m.user.e2ee_public_key}
+            for m in conv.members
+        ]
+    }
 
 
 # --- Conversations -------------------------------------------------------
@@ -445,6 +518,67 @@ async def send_stego_message(
     db.commit()
     db.refresh(msg)
     return _message_public(msg)
+
+
+@router.post("/conversations/{conv_id}/e2ee-stego", response_model=DirectMessagePublic)
+@limiter.limit(settings.rate_limit_embed)
+async def send_e2ee_stego(
+    request: Request,
+    conv_id: int,
+    envelopes: str = Form(...),
+    expire_minutes: int | None = Form(default=None),
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    conv, member = _get_membership(db, conv_id, user)
+    if not conv.is_group:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="E2EE image messages require a group")
+    try:
+        parsed = E2EESendInput.model_validate({"envelopes": json.loads(envelopes), "expire_minutes": expire_minutes})
+    except Exception as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid recipient envelopes") from exc
+    current = {m.user_id: m.user for m in conv.members}
+    supplied = [e.user_id for e in parsed.envelopes]
+    if len(supplied) != len(set(supplied)) or set(supplied) != set(current):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Envelopes must match current group membership")
+    if any(not current[i].e2ee_public_key for i in supplied):
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Every group member must register an encryption key")
+    image_bytes = await read_image_upload(image)
+    # Verify this is a valid decodable image without changing its client-generated pixels.
+    try:
+        Image.open(BytesIO(image_bytes)).verify()
+    except Exception as exc:
+        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Invalid image") from exc
+    filename = save_bytes(image_bytes, prefix="e2ee", ext=".png")
+    msg = DirectMessage(conversation_id=conv.id, sender_id=user.id, kind="stego", stego_filename=filename,
+                        has_decoy=False, is_e2ee=True,
+                        expires_at=datetime.now(UTC) + timedelta(minutes=parsed.expire_minutes) if parsed.expire_minutes else None)
+    db.add(msg)
+    db.flush()
+    for item in parsed.envelopes:
+        db.add(MessageKeyEnvelope(message_id=msg.id, user_id=item.user_id, envelope=item.envelope))
+    conv.updated_at = datetime.now(UTC)
+    member.last_read_id = max(member.last_read_id, msg.id)
+    log_activity(db, user.id, ActivityType.EMBED, detail="chat e2ee image", ip_address=_client_ip(request), commit=False)
+    db.commit()
+    db.refresh(msg)
+    return _message_public(msg)
+
+
+@router.get("/messages/{message_id}/e2ee-envelope")
+def get_e2ee_envelope(message_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    msg = db.query(DirectMessage).filter(DirectMessage.id == message_id, DirectMessage.is_e2ee.is_(True)).first()
+    if msg is None or msg.kind != "stego":
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Message not found")
+    _get_membership(db, msg.conversation_id, user)
+    if msg.is_expired:
+        _purge_expired(db, [msg])
+        raise HTTPException(status.HTTP_410_GONE, detail="This message has expired")
+    entry = db.query(MessageKeyEnvelope).filter_by(message_id=msg.id, user_id=user.id).first()
+    if entry is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No key envelope for this account")
+    return {"envelope": entry.envelope, "stego_url": f"/api/files/{msg.stego_filename}"}
 
 
 @router.post("/messages/{message_id}/reveal", response_model=RevealResponse)

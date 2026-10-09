@@ -68,10 +68,9 @@ class ConversationMember(Base):
 class DirectMessage(Base):
     """One message in a conversation: plain text or a stego image.
 
-    For stego messages only the carrier image is stored — the hidden text
-    lives inside the file, encrypted with the sender's password, and is
-    recovered on demand via the reveal endpoint. It is never persisted in
-    plaintext server-side.
+    For stego messages only the carrier image is stored. Legacy messages use
+    the server-side password flow; E2EE messages carry a browser-encrypted
+    payload and recipient-specific envelopes without server-visible secrets.
     """
 
     __tablename__ = "direct_messages"
@@ -89,6 +88,7 @@ class DirectMessage(Base):
     # password. Server-internal only — never serialized — so its existence
     # stays deniable to anyone inspecting API responses.
     has_decoy: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_e2ee: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     # Optional self-destruct: once passed, the message (and its stego file) is
     # hidden on read and lazily deleted.
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -98,6 +98,9 @@ class DirectMessage(Base):
 
     conversation: Mapped["Conversation"] = relationship(back_populates="messages")
     sender: Mapped["User"] = relationship()
+    key_envelopes: Mapped[list["MessageKeyEnvelope"]] = relationship(
+        back_populates="message", cascade="all, delete-orphan"
+    )
 
     @property
     def is_expired(self) -> bool:
@@ -107,3 +110,22 @@ class DirectMessage(Base):
         if exp.tzinfo is None:
             exp = exp.replace(tzinfo=UTC)
         return exp <= datetime.now(UTC)
+
+
+class MessageKeyEnvelope(Base):
+    """One RSA-OAEP wrapped E2EE key bundle per authorized group member."""
+
+    __tablename__ = "message_key_envelopes"
+    __table_args__ = (
+        UniqueConstraint("message_id", "user_id", name="uq_message_envelope_user"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    message_id: Mapped[int] = mapped_column(
+        ForeignKey("direct_messages.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    envelope: Mapped[str] = mapped_column(Text, nullable=False)
+    message: Mapped["DirectMessage"] = relationship(back_populates="key_envelopes")
+    user: Mapped["User"] = relationship(back_populates="e2ee_envelopes")

@@ -232,6 +232,7 @@ export interface DirectMessage {
   sender_id: number;
   sender_username: string;
   kind: "text" | "stego";
+  is_e2ee: boolean;
   body: string | null;
   stego_url: string | null;
   created_at: string;

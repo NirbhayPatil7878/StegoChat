@@ -1,9 +1,9 @@
-"""Outbound email — Gmail API (OAuth2) or SMTP fallback.
+"""Outbound email — Gmail API (OAuth2), SMTP, or explicitly enabled dev mail.
 
 Priority:
-  1. Gmail API  — when GMAIL_CLIENT_ID / GMAIL_CLIENT_SECRET / GMAIL_REFRESH_TOKEN are set.
-  2. SMTP       — when STEGOCHAT_SMTP_HOST is set (classic STARTTLS / SSL).
-  3. Dev mode   — logs the message and echoes the token in the API response.
+  1. SMTP       — when host, username, password, and MAIL_FROM are set.
+  2. Gmail API  — when all STEGOCHAT_GMAIL_* credentials and MAIL_FROM are set.
+  3. Dev mode   — only when explicitly enabled in development.
 """
 
 from __future__ import annotations
@@ -18,6 +18,11 @@ from email.mime.text import MIMEText
 from app.config import settings
 
 logger = logging.getLogger("stegochat.mail")
+_SMTP_TIMEOUT_SECONDS = 20
+
+
+class MailConfigurationError(RuntimeError):
+    """No usable mail provider is configured, or its settings are incomplete."""
 
 
 # ---------------------------------------------------------------------------
@@ -32,7 +37,47 @@ def _gmail_api_configured() -> bool:
 
 
 def smtp_configured() -> bool:
-    return bool(settings.smtp_host and settings.smtp_password)
+    return bool(
+        settings.smtp_host and settings.smtp_user and settings.smtp_password and settings.mail_from
+    )
+
+
+def select_mail_provider() -> str:
+    """Select one provider deterministically; configured-provider failures never downgrade."""
+    smtp_values = (settings.smtp_host, settings.smtp_user, settings.smtp_password)
+    if any(smtp_values):
+        if not smtp_configured():
+            raise MailConfigurationError(
+                "Incomplete SMTP configuration; set host, username, password, "
+                "and STEGOCHAT_MAIL_FROM."
+            )
+        if not 1 <= settings.smtp_port <= 65535:
+            raise MailConfigurationError("SMTP port must be between 1 and 65535.")
+        return "smtp"
+
+    gmail_values = (
+        settings.gmail_client_id,
+        settings.gmail_client_secret,
+        settings.gmail_refresh_token,
+    )
+    if any(gmail_values):
+        if not _gmail_api_configured() or not settings.mail_from:
+            raise MailConfigurationError(
+                "Incomplete Gmail API configuration; set client ID, client secret, "
+                "refresh token, and STEGOCHAT_MAIL_FROM."
+            )
+        return "gmail_api"
+
+    if settings.dev_mail_enabled:
+        if settings.environment != "development":
+            raise MailConfigurationError(
+                "Console mail is development only; set STEGOCHAT_ENVIRONMENT=development."
+            )
+        return "development"
+
+    raise MailConfigurationError(
+        "No email provider is configured. Configure Gmail API or SMTP before sending mail."
+    )
 
 
 def _build_mime(to: str, subject: str, plain: str, html: str | None) -> MIMEMultipart:
@@ -74,8 +119,14 @@ def _send_via_gmail_api(msg: MIMEMultipart) -> bool:
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         service.users().messages().send(userId="me", body={"raw": raw}).execute()
         return True
-    except Exception:
-        logger.exception("Gmail API send failed")
+    except Exception as exc:
+        if "invalid_grant" in str(exc).lower():
+            logger.error(
+                "Gmail API OAuth refresh was rejected (invalid_grant); "
+                "regenerate the refresh token with backend/scripts/get_gmail_token.py."
+            )
+        else:
+            logger.error("Gmail API send failed; check provider configuration and network access.")
         return False
 
 
@@ -84,12 +135,21 @@ def _send_via_smtp(msg: MIMEMultipart) -> bool:
     try:
         if settings.smtp_use_ssl:
             ctx = ssl.create_default_context()
-            with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, context=ctx) as srv:
+            with smtplib.SMTP_SSL(
+                settings.smtp_host,
+                settings.smtp_port,
+                context=ctx,
+                timeout=_SMTP_TIMEOUT_SECONDS,
+            ) as srv:
                 if settings.smtp_user:
                     srv.login(settings.smtp_user, settings.smtp_password or "")
                 srv.send_message(msg)
         else:
-            with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as srv:
+            with smtplib.SMTP(
+                settings.smtp_host,
+                settings.smtp_port,
+                timeout=_SMTP_TIMEOUT_SECONDS,
+            ) as srv:
                 srv.ehlo()
                 srv.starttls(context=ssl.create_default_context())
                 srv.ehlo()
@@ -97,24 +157,44 @@ def _send_via_smtp(msg: MIMEMultipart) -> bool:
                     srv.login(settings.smtp_user, settings.smtp_password or "")
                 srv.send_message(msg)
         return True
+    except smtplib.SMTPAuthenticationError:
+        logger.error(
+            "SMTP authentication failed; check the Brevo SMTP login and "
+            "STEGOCHAT_SMTP_PASSWORD in backend/.env."
+        )
+        return False
     except Exception:
-        logger.exception("SMTP send failed")
+        logger.error("SMTP send failed; check the SMTP host, port, and network access.")
         return False
 
 
-def send_mail(to: str, subject: str, body: str, html: str | None = None) -> bool:
+def send_mail(
+    to: str,
+    subject: str,
+    body: str,
+    html: str | None = None,
+    *,
+    include_dev_body: bool = False,
+) -> bool:
     """Send an email; returns True if accepted by a mail server."""
-    if _gmail_api_configured():
+    provider = select_mail_provider()
+    if provider == "gmail_api":
         msg = _build_mime(to, subject, body, html)
-        return _send_via_gmail_api(msg)
-
-    if smtp_configured():
+        accepted = _send_via_gmail_api(msg)
+    elif provider == "smtp":
         msg = _build_mime(to, subject, body, html)
-        return _send_via_smtp(msg)
+        accepted = _send_via_smtp(msg)
+    else:
+        # Explicitly opted-in local testing only. Never enabled by default.
+        if include_dev_body:
+            logger.info("[dev mail] to=%s subject=%r\n%s", to, subject, body)
+        else:
+            logger.info("[dev mail] to=%s subject=%r", to, subject)
+        return True
 
-    # Dev mode — log and let callers surface the token in the API response.
-    logger.info("[dev mail] to=%s subject=%r\n%s", to, subject, body)
-    return False
+    if accepted:
+        logger.info("Email accepted by provider: %s", provider)
+    return accepted
 
 
 # ---------------------------------------------------------------------------
@@ -196,7 +276,7 @@ def send_otp_email(to: str, code: str, ttl_minutes: int = 10) -> bool:
 </table>
 </body>
 </html>"""
-    return send_mail(to, subject, plain, html)
+    return send_mail(to, subject, plain, html, include_dev_body=True)
 
 
 def send_reset_email(to: str, reset_url: str) -> bool:

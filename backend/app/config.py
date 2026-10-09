@@ -8,6 +8,7 @@ configuration, while every value can be overridden via environment variables
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
@@ -16,7 +17,8 @@ PROJECT_ROOT = BASE_DIR.parent  # repo root
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=str(BASE_DIR / ".env"),
+        # Load repository-root then backend-local settings; process env wins.
+        env_file=(str(PROJECT_ROOT / ".env"), str(BASE_DIR / ".env")),
         env_prefix="STEGOCHAT_",
         extra="ignore",
     )
@@ -64,26 +66,29 @@ class Settings(BaseSettings):
 
     # --- Rate limiting ---
     rate_limit_auth: str = "10/minute"
+    rate_limit_otp_resend: str = "3/minute"
     rate_limit_default: str = "120/minute"
     rate_limit_embed: str = "30/minute"
 
     # --- Email (OTP / password reset / verification) ---
-    # Option A — Gmail API (recommended, no App Password needed):
+    # Option A — SMTP (preferred when fully configured, including Brevo):
+    #   Set STEGOCHAT_SMTP_HOST, STEGOCHAT_SMTP_PORT, STEGOCHAT_SMTP_USER,
+    #   STEGOCHAT_SMTP_PASSWORD, STEGOCHAT_MAIL_FROM.
+    # Option B — Gmail API OAuth (used when SMTP is not configured):
     #   Set STEGOCHAT_GMAIL_CLIENT_ID, STEGOCHAT_GMAIL_CLIENT_SECRET,
     #   STEGOCHAT_GMAIL_REFRESH_TOKEN, STEGOCHAT_MAIL_FROM.
     #   Run scripts/get_gmail_token.py once to obtain the refresh token.
-    # Option B — Generic SMTP (e.g. Gmail App Password, Mailgun, etc.):
-    #   Set STEGOCHAT_SMTP_HOST, STEGOCHAT_SMTP_USER, STEGOCHAT_SMTP_PASSWORD.
-    # Option C — Dev mode: leave everything blank; tokens are logged + echoed.
+    # Option C — isolated local testing only: explicitly enable console mail.
     gmail_client_id: str | None = None
     gmail_client_secret: str | None = None
     gmail_refresh_token: str | None = None
     smtp_host: str | None = None
-    smtp_port: int = 587
+    smtp_port: int = Field(default=587, ge=1, le=65535)
     smtp_use_ssl: bool = False
     smtp_user: str | None = None
     smtp_password: str | None = None
-    mail_from: str = "stegochat232@gmail.com"
+    mail_from: str | None = None
+    dev_mail_enabled: bool = False
     frontend_url: str = "http://localhost:5173"
 
     @property

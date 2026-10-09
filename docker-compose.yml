@@ -19,6 +19,12 @@ services:
       context: ./backend
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
+    # Local mail credentials live in the ignored backend/.env and are passed
+    # directly into the backend container. It is optional for deployments
+    # that provide mail settings through another environment manager.
+    env_file:
+      - path: ./backend/.env
+        required: false
     restart: unless-stopped
     depends_on:
       db:

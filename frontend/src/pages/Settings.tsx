@@ -122,11 +122,7 @@ export default function Settings() {
   const requestVerification = useMutation({
     mutationFn: authApi.requestVerification,
     onSuccess: (r) => {
-      if (r.dev_token) {
-        window.open(`/verify-email?token=${r.dev_token}`, "_blank");
-      } else {
-        toast.success(r.message);
-      }
+      toast.success(r.message);
     },
     onError: (e) => toast.error(apiError(e, "Could not send verification")),
   });

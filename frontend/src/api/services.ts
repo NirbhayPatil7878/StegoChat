@@ -206,6 +206,23 @@ export const chatApi = {
     api
       .post<{ message: string }>(`/messages/${messageId}/reveal`, { password })
       .then((r) => r.data),
+  registerE2EEKey: (public_key: string) =>
+    api.put("/users/e2ee-key", { public_key }).then((r) => r.data),
+  e2eeKeys: (convId: number) =>
+    api.get<{ keys: Array<{ user_id: number; public_key: string | null }> }>(`/conversations/${convId}/e2ee-keys`).then((r) => r.data.keys),
+  sendE2EE: (convId: number, image: Blob, envelopes: Array<{ user_id: number; envelope: string }>, expire_minutes: number) => {
+    const form = new FormData();
+    form.append("image", image, "encrypted.png");
+    form.append("envelopes", JSON.stringify(envelopes));
+    if (expire_minutes > 0) form.append("expire_minutes", String(expire_minutes));
+    return api.post<DirectMessage>(`/conversations/${convId}/e2ee-stego`, form, { headers: { "Content-Type": "multipart/form-data" } }).then((r) => r.data);
+  },
+  e2eeEnvelope: (messageId: number) =>
+    api.get<{ envelope: string; stego_url: string }>(`/messages/${messageId}/e2ee-envelope`).then((r) => r.data),
+  downloadImage: (url: string) => {
+    const apiRelativeUrl = url.replace(/^\/api(?=\/)/, "");
+    return api.get(apiRelativeUrl, { responseType: "blob" }).then((r) => r.data as Blob);
+  },
 };
 
 // --- Dashboard ---

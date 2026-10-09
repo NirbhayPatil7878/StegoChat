@@ -34,13 +34,6 @@ export default function ForgotPassword() {
             <MailCheck className="h-7 w-7 text-success" />
           </div>
           <p className="text-sm text-muted">{request.data.message}</p>
-          {request.data.dev_token && (
-            <Link to={`/reset-password?token=${request.data.dev_token}`}>
-              <Button variant="outline" className="w-full">
-                Continue to reset (dev mode)
-              </Button>
-            </Link>
-          )}
         </div>
       ) : (
         <form

@@ -82,3 +82,35 @@ User 1───* Chat 1───* Message
 4. PNG saved to `uploads/`; a `Message` row records ciphertext + preview.
 5. Optional dead-drop token created; `ActivityLog` entry written.
 6. Response returns the stego URL and any dead-drop token.
+# Group image E2EE
+
+Group steganographic images use a browser-only E2EE path. The browser encrypts
+the message with AES-256-GCM using a fresh key and nonce, and embeds the
+ciphertext in a PNG. The content key and independent random carrier password
+are each wrapped for every current group member using RSA-OAEP with SHA-256.
+The API stores the opaque image and one envelope per recipient; it never receives
+the message text, content key, carrier password, or private key. Legacy direct
+messages and older group images continue to use the existing server-side
+password-protected stego path.
+
+The E2EE carrier uses a browser canvas LSB layout specific to this E2EE flow.
+The existing Python steganography algorithms remain in place for legacy
+messages. E2EE images need lossless PNG handling; converting them to JPEG or
+otherwise recompressing them destroys the embedded ciphertext.
+
+Private RSA keys are non-extractable Web Crypto keys stored in IndexedDB on one
+browser profile. Clearing site data, losing the device, or changing browsers
+loses access to prior envelopes. The current release does not support multiple
+devices or secure key recovery. A user with a missing local key cannot replace
+the registered public key automatically; key replacement requires an explicit
+recovery process. Newly added members receive envelopes only for messages sent
+after they join. Removed members cannot fetch envelopes afterward, but removal
+cannot revoke keys or plaintext already obtained on their devices.
+
+Public key registration is first-write-only. The server can deny service and
+can present a substituted key before registration; members currently have no
+out-of-band fingerprint verification or key transparency. Therefore this
+design does not protect against a malicious server that replaces keys. Verify
+public-key fingerprints through a trusted independent channel before relying
+on protection from server compromise. Encrypted messages still expose ordinary
+metadata such as participants, timing, image size, and expiry.

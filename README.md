@@ -73,12 +73,22 @@ npm run dev
 ```
 App: `http://localhost:5173` · The dev server proxies `/api` to the backend automatically.
 
+For real email delivery, copy `backend/.env.example` to `backend/.env` and set
+`STEGOCHAT_SMTP_HOST`, `STEGOCHAT_SMTP_PORT`, `STEGOCHAT_SMTP_USER`,
+`STEGOCHAT_SMTP_PASSWORD`, and `STEGOCHAT_MAIL_FROM`. Brevo SMTP on port 587
+uses STARTTLS. Gmail API OAuth remains available when SMTP is not configured.
+The console mail transport is disabled by default; only enable
+`STEGOCHAT_DEV_MAIL_ENABLED=true` for isolated local testing with
+`STEGOCHAT_ENVIRONMENT=development`. In that mode, OTP codes appear in the
+backend terminal; password-reset and verification links are not logged.
+
 ---
 
 ### Option B — Docker (one command)
 
 ```bash
 cp .env.example .env    # set STEGOCHAT_SECRET_KEY
+cp backend/.env.example backend/.env  # set the Brevo SMTP key
 docker compose up --build
 ```
 

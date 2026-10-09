@@ -120,11 +120,10 @@ class SignupVerifyOtpRequest(BaseModel):
 
 
 class TokenIssueResponse(BaseModel):
-    """Returned by forgot-password / request-verification.
+    """Generic response for reset and verification email requests.
 
-    ``dev_token`` is only populated when no SMTP server is configured, so the
-    flow stays testable in local development. In production it is None and the
-    token is delivered by email only.
+    ``dev_token`` remains in the response shape for older clients but is never
+    populated; one-time tokens are delivered only through the selected provider.
     """
 
     status: str = "ok"

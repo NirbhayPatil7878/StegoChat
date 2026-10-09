@@ -2,6 +2,7 @@
 password reset, email verification, and email OTP second factor."""
 
 import hashlib
+import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 
@@ -56,9 +57,30 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.services.activity import log_activity
-from app.services.mail import send_otp_email, send_reset_email, send_verification_email
+from app.services.mail import (
+    MailConfigurationError,
+    send_otp_email,
+    send_reset_email,
+    send_verification_email,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+logger = logging.getLogger("stegochat.auth")
+
+
+def _require_email_delivery(send) -> None:
+    """Translate provider failure into a safe, actionable API error."""
+    try:
+        sent = send()
+    except MailConfigurationError as exc:
+        logger.error("Email provider configuration error: %s", exc)
+        sent = False
+    if not sent:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Email delivery failed. Check server mail configuration and logs, then retry.",
+        )
+
 
 # --- Signup email verification OTP constants ---
 _SIGNUP_OTP_PURPOSE = "signup_verify"
@@ -81,7 +103,7 @@ def _send_signup_otp(db: Session, user: User) -> None:
             expires_at=datetime.now(UTC) + timedelta(minutes=_SIGNUP_OTP_TTL_MINUTES),
         )
     )
-    send_otp_email(user.email, code, _SIGNUP_OTP_TTL_MINUTES)
+    _require_email_delivery(lambda: send_otp_email(user.email, code, _SIGNUP_OTP_TTL_MINUTES))
 
 
 def _issue_tokens(db: Session, user: User) -> TokenPair:
@@ -141,15 +163,7 @@ def signup_verify_otp(
 ):
     """Verify email address with the OTP sent during registration."""
     if user.email_verified:
-        tokens = _issue_tokens(db, user)
-        db.commit()
-        db.refresh(user)
-        return {
-            "status": "ok",
-            "already_verified": True,
-            "user": UserPublic.model_validate(user),
-            "tokens": tokens,
-        }
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Email is already verified")
 
     record = (
         db.query(OneTimeToken)
@@ -198,7 +212,7 @@ def signup_verify_otp(
 
 
 @router.post("/signup-resend-otp", status_code=status.HTTP_200_OK)
-@limiter.limit(settings.rate_limit_auth)
+@limiter.limit(settings.rate_limit_otp_resend)
 def signup_resend_otp(
     request: Request,
     db: Session = Depends(get_db),
@@ -369,9 +383,13 @@ def _send_email_otp(db: Session, user: User) -> OtpEmailChallenge:
             expires_at=datetime.now(UTC) + timedelta(minutes=_OTP_TTL_MINUTES),
         )
     )
+    try:
+        _require_email_delivery(lambda: send_otp_email(user.email, code, _OTP_TTL_MINUTES))
+    except HTTPException:
+        # Keep any prior unexpired code valid if this delivery attempt fails.
+        db.rollback()
+        raise
     db.commit()
-
-    send_otp_email(user.email, code, _OTP_TTL_MINUTES)
     return OtpEmailChallenge(challenge_token=create_challenge_token(user.id))
 
 
@@ -578,20 +596,25 @@ def forgot_password(
     payload: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.email == payload.email.lower()).first()
-    dev_token = None
     if user and user.is_active:
         raw = _issue_one_time_token(db, user, "reset")
         db.commit()
-        sent = send_reset_email(
-            user.email,
-            f"{settings.frontend_url}/reset-password?token={raw}",
-        )
+        try:
+            sent = send_reset_email(
+                user.email,
+                f"{settings.frontend_url}/reset-password?token={raw}",
+            )
+        except MailConfigurationError as exc:
+            logger.error("Email provider configuration error: %s", exc)
+            sent = False
         if not sent:
-            dev_token = raw
+            logger.error("Password reset email delivery failed")
     # Always answer the same way so the endpoint cannot be used to probe emails.
     return TokenIssueResponse(
-        message="If that email is registered, a reset link has been sent.",
-        dev_token=dev_token,
+        message=(
+            "If that email is registered, password-reset instructions will be sent "
+            "when email delivery is available."
+        ),
     )
 
 
@@ -621,13 +644,14 @@ def request_verification(
         return TokenIssueResponse(message="Email is already verified.")
     raw = _issue_one_time_token(db, user, "verify", minutes=60 * 24)
     db.commit()
-    sent = send_verification_email(
-        user.email,
-        f"{settings.frontend_url}/verify-email?token={raw}",
+    _require_email_delivery(
+        lambda: send_verification_email(
+            user.email,
+            f"{settings.frontend_url}/verify-email?token={raw}",
+        )
     )
     return TokenIssueResponse(
-        message="Verification email sent." if sent else "Verification token issued (dev mode).",
-        dev_token=None if sent else raw,
+        message="Verification email sent.",
     )
 
 
