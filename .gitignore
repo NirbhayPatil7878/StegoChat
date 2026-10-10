@@ -30,3 +30,4 @@ server.pid
 .idea/
 .vscode/
 *.swp
+docs/VIVA_GUIDE.md
