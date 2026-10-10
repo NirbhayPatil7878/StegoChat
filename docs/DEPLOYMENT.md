@@ -13,7 +13,7 @@ Services:
 - `backend` — FastAPI/uvicorn, waits for a healthy DB, uses the `psycopg` driver.
 - `frontend` — nginx serving the built SPA and proxying `/api` to `backend`.
 
-The UI is exposed on `WEB_PORT` (default 8080). Put a TLS-terminating reverse
+The UI is exposed on `WEB_PORT` (default 3000). Put a TLS-terminating reverse
 proxy (Caddy, Traefik, or nginx) in front for HTTPS.
 
 Generate a secret:

@@ -47,6 +47,13 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost:4173",
     ]
+    # Permit browser clients served from private LAN IPs when the API is
+    # queried directly, while retaining credentialed CORS for auth cookies.
+    cors_origin_regex: str = (
+        r"https?://(localhost|127\.0\.0\.1|10(?:\.\d{1,3}){3}|"
+        r"192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})"
+        r"(?::\d+)?"
+    )
 
     # --- Uploads / storage ---
     upload_dir: Path = PROJECT_ROOT / "uploads"

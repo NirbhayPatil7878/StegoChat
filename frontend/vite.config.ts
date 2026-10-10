@@ -8,6 +8,7 @@ export default defineConfig({
     alias: { "@": path.resolve(__dirname, "./src") },
   },
   server: {
+    host: "0.0.0.0",
     port: 5173,
     proxy: {
       // Proxy API + generated files to the FastAPI backend during dev.

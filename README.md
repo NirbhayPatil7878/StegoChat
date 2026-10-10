@@ -82,7 +82,7 @@ cp .env.example .env    # set STEGOCHAT_SECRET_KEY
 docker compose up --build
 ```
 
-App: `http://localhost:8080` — runs Postgres + FastAPI + nginx-served frontend together.
+App: `http://localhost:3000` — runs Postgres + FastAPI + nginx-served frontend together.
 
 Generate a strong secret key:
 ```bash

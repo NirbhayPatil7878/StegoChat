@@ -9,7 +9,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stego}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stego} -d ${POSTGRES_DB:-stegochat}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,14 +28,15 @@ services:
       STEGOCHAT_DEBUG: "false"
       STEGOCHAT_SECRET_KEY: ${STEGOCHAT_SECRET_KEY:?set a strong secret in .env}
       STEGOCHAT_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-stego}:${POSTGRES_PASSWORD:-stego}@db:5432/${POSTGRES_DB:-stegochat}
-      STEGOCHAT_CORS_ORIGINS: '["http://localhost:8080","http://localhost"]'
+      STEGOCHAT_CORS_ORIGINS: '["http://localhost:3000","http://localhost"]'
       STEGOCHAT_UPLOAD_DIR: /data/uploads
       STEGOCHAT_SAMPLE_DIR: /data/samples
     volumes:
       - uploads:/data/uploads
       - ./sample_images:/data/samples:ro
-    expose:
-      - "8000"
+    # Publish the API for direct LAN testing as well as the nginx proxy.
+    ports:
+      - "${API_PORT:-8000}:8000"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/ready || exit 1"]
       interval: 15s
@@ -50,7 +51,7 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "${WEB_PORT:-8080}:80"
+      - "${WEB_PORT:-3000}:80"
 
 volumes:
   db_data:
